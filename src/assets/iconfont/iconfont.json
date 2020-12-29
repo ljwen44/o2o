@@ -1,0 +1,51 @@
+{
+  "id": "2268173",
+  "name": "o2o",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1687280",
+      "name": "积分",
+      "font_class": "ziyuan",
+      "unicode": "e638",
+      "unicode_decimal": 58936
+    },
+    {
+      "icon_id": "6460184",
+      "name": "金币商城",
+      "font_class": "jinbishangcheng",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "2119413",
+      "name": "好友列表",
+      "font_class": "linkman-contacts_ico",
+      "unicode": "e666",
+      "unicode_decimal": 58982
+    },
+    {
+      "icon_id": "4251763",
+      "name": "添加好友",
+      "font_class": "tianjiahaoyou",
+      "unicode": "e64f",
+      "unicode_decimal": 58959
+    },
+    {
+      "icon_id": "5876958",
+      "name": "好友",
+      "font_class": "biaoqing",
+      "unicode": "e60f",
+      "unicode_decimal": 58895
+    },
+    {
+      "icon_id": "3461116",
+      "name": "学士帽",
+      "font_class": "xueshimao",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    }
+  ]
+}
