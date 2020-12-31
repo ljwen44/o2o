@@ -154,7 +154,6 @@ export default {
             })
             this.axios.post('/loginController/login', data)
             .then(res => {
-                console.log(res.data)
                 if(!res.data.message){
                     this.$alert("登录成功！", "提示", {
                         confirmButtonText: "确定",

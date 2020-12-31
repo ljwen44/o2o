@@ -45,7 +45,7 @@
             <el-header :style="{'width': isCollapse ? 'calc(100vw - 65px)':'85%'}">
                 <img src="../../assets/images/logo.png" width="120" height="60">
                 <p class="userInfo">
-                    <span>{{user.userName}}</span>
+                    <span  @click="toSecurity">{{user.userName}}</span>
                     <span @click="logout">退出</span>
                 </p>
             </el-header>
@@ -72,8 +72,26 @@ export default {
     },
     methods: {
         logout(){
-            // this.$confirm()
-            console.log("退出")
+            this.$confirm('确定退出吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.$store.commit("DELUSER")
+                this.$router.push('/login')
+                this.$message({
+                    type: 'success',
+                    message: '退出成功'
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })        
+            })
+        },
+        toSecurity(){
+            this.$router.push("/admin/security")
         }
     },
 }

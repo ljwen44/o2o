@@ -59,11 +59,11 @@ export default {
                 block: this.obj.block,
                 minSalary: this.minSalary,
                 maxSalary: this.maxSalary,
-                page: this.page
+                page: this.page,
+                type: 0
             })
             this.axios.post("/jobController/getAllJob", data)
             .then(res => {
-                console.log(res.data)
                 this.list = res.data.list
                 this.loading = false
             }).catch(err => {

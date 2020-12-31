@@ -28,16 +28,16 @@
                     </p>
                 </el-col>
             </el-row>
-            <el-row v-if="false">
+            <el-row v-if="type==='教员'">
                 <div class="box">
                     <h3>用户评价</h3>
                     <el-card>
                         <div class="content" v-for="(item, index) in evaluateList" :key="index">
                             <div class="contentHeader">
                                 <el-avatar :src="item.avatar"></el-avatar>
-                                <span class="name">{{item.name}}</span>
+                                <span class="name">{{item.userName}}</span>
                                 <el-rate
-                                    v-model="item.rate"
+                                    v-model="item.erate"
                                     disabled
                                     show-score
                                     text-color="#ff9900"
@@ -45,8 +45,8 @@
                                 </el-rate>
                             </div>
                             <div class="contentBody">
-                                <p>{{item.desc}}</p>
-                                <p><i class="el-icon-time"></i>{{item.time | timeFilter('yyyy-MM-dd')}}</p>
+                                <p>{{item.content}}</p>
+                                <p><i class="el-icon-time"></i>{{item.etime}}</p>
                             </div>
                         </div>
                     </el-card>
@@ -56,10 +56,13 @@
                 <div class="box">
                     <h3>最近发布</h3>
                     <el-timeline class="eltimeline">
-                        <el-timeline-item :timestamp="item.info.time" placement="top" v-for="(item, index) in list.slice(0,3)" :key="index">
+                        <el-timeline-item 
+                            :timestamp="item.ptime" 
+                            placement="top" 
+                            v-for="(item, index) in list" :key="index">
                             <el-card>
-                                <h5>{{item.info.desc}}</h5>
-                                <p>提交于 {{item.info.time}}</p>
+                                <h5>{{item.content}}</h5>
+                                <p>提交于 {{item.ptime}}</p>
                             </el-card>
                         </el-timeline-item>
                     </el-timeline>
@@ -70,25 +73,48 @@
 </template>
 
 <script>
-import {evaluateList, alist} from '@/lib/data.js'
-import { mapState } from 'vuex'
 export default {
     data() {
         return {
-            evaluateList: evaluateList,
-            list: alist
+            evaluateList: [],
+            list: [],
+            uid: '',
+            type: '',
+            user: {}
         }
     },
     methods: {
+        getData(){
+            let data = this.$qs.stringify({
+                uid: this.uid,
+                type: this.type
+            })
+            this.axios.post("/userController/getUserDetailFromAdmin", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message,"提示",{
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.user = res.data.user
+                    this.evaluateList = res.data.evaList || []
+                    this.list = res.data.jobList
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常，请刷新重试","提示",{
+                    confirmButtonText: "确定"
+                })
+            })
+        },
         goBack(){
             this.$router.go(-1)
         }
     },
-    computed: {
-        ...mapState([
-            'user'
-        ])
-    }
+    created() {
+        this.uid = this.$router.history.current.query.uid
+        this.type = this.$router.history.current.query.type
+        this.getData()
+    },
 }
 </script>
 

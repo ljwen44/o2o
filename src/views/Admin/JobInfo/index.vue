@@ -2,7 +2,7 @@
     <el-main>
         <h3>求教信息管理</h3>
         <el-table
-            :data="userData"
+            :data="tableData"
             style="width: 100%">
             <el-table-column type="expand">
                 <template slot-scope="props">
@@ -12,31 +12,31 @@
             <el-table-column
                 label="发布者">
                 <template slot-scope="scope">
-                    <span>{{scope.row.user.userName}}</span>
+                    <span>{{scope.row.name}}</span>
                 </template>
             </el-table-column>
             <el-table-column
                 label="联系人">
                 <template slot-scope="scope">
-                    <span>{{scope.row.info.userName}}</span>
+                    <span>{{scope.row.userName}}</span>
                 </template>
             </el-table-column>
             <el-table-column
                 label="联系电话">
                 <template slot-scope="scope">
-                    <span>{{scope.row.info.phone}}</span>
+                    <span>{{scope.row.phone}}</span>
                 </template>
             </el-table-column>
             <el-table-column
                 label="地址">
                 <template slot-scope="scope">
-                    <span>{{scope.row.info.place}}</span>
+                    <span>{{scope.row.province + scope.row.city + scope.row.block + scope.row.address}}</span>
                 </template>
             </el-table-column>
             <el-table-column
                 label="发布时间">
                 <template slot-scope="scope">
-                    <span>{{scope.row.info.time}}</span>
+                    <span>{{scope.row.ptime}}</span>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
@@ -44,14 +44,14 @@
                     <el-button
                         size="mini"
                         type="danger"
-                        @click="handleDel(scope.$index, scope.row.info)">删除</el-button>
+                        @click="handleDel(scope.$index, scope.row.pid)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
         <el-pagination
         background
         layout="prev, pager, next"
-        :total="1000"
+        :total="total"
         @current-change="currentPageChange">
         </el-pagination>
     </el-main>
@@ -59,24 +59,45 @@
 
 <script>
 import JobInfo from '_c/JobInfo/index.vue'
-import {alist} from '@/lib/data.js'
 export default {
     data() {
         return {
-            userData: alist,
-            page: 1
+            tableData: [],
+            page: 1,
+            total: 0
         }
     },
     components: {
         JobInfo
     },
     methods: {
+        getData(){
+            let data = this.$qs.stringify({
+                page: this.page,
+                type: 1
+            })
+            this.axios.post("/jobController/getAllJob", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.tableData = res.data.list
+                    this.total = res.data.total || 0
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
         handleDel(index, id){
-            this.$message(index)
+            console.log(id)
         },
         currentPageChange(page){
             this.page = page
-            console.log(page)
+            this.getData()
         }
     },
 }

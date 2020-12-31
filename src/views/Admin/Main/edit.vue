@@ -34,6 +34,7 @@ export default {
                 desc: '',
                 img: ''
             },
+            oimg: "",
             rules: {
                 title: [
                     { required: true, message: '请输入标题', trigger: 'blur' },
@@ -49,30 +50,49 @@ export default {
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
+                    let data = this.$qs.stringify({
+                        title: this.ruleForm.title,
+                        title: this.ruleForm.desc,
+                        img: this.ruleForm.img,
+                        bid: this.ruleForm.bid,
+                        oimg: this.ruleForm.oimg
+                    })
                     if(this.ruleForm.img){
                         if(this.newCreate){
-                            this.axios.post("/addBanner", this.ruleForm)
+                            this.axios.post("/addBanner", data)
                             .then(res => {
-                                this.$alert("创建成功！", "提示", {
-                                    confirmButtonText: "确定",
-                                    callback: (action) => {
-                                        this.$router.push("/admin/main")
-                                    }
-                                })
+                                if(res.data.message){
+                                    this.$alert(res.data.message, "提示", {
+                                        confirmButtonText: "确定"
+                                    })
+                                } else {
+                                    this.$alert("创建成功！", "提示", {
+                                        confirmButtonText: "确定",
+                                        callback: (action) => {
+                                            this.$router.push("/admin/index/main")
+                                        }
+                                    })
+                                }
                             }).catch(err => {
                                 this.$alert("创建失败,请稍后重试！", "提示", {
                                     confirmButtonText: "确定"
                                 })
                             })
                         } else {
-                            this.axios.post("/updBanner", this.ruleForm)
+                            this.axios.post("/editBanner", data)
                             .then(res => {
-                                this.$alert("更新成功！", "提示", {
-                                    confirmButtonText: "确定",
-                                    callback: (action) => {
-                                        this.$router.push("/admin/main")
-                                    }
-                                })
+                                if(res.data.message){
+                                    this.$alert(res.data.message, "提示", {
+                                        confirmButtonText: "确定"
+                                    })
+                                } else {
+                                    this.$alert("更新成功！", "提示", {
+                                        confirmButtonText: "确定",
+                                        callback: (action) => {
+                                            this.$router.push("/admin/index/main")
+                                        }
+                                    })
+                                }
                             }).catch(err => {
                                 this.$alert("更新失败,请稍后重试！", "提示", {
                                     confirmButtonText: "确定"
@@ -112,6 +132,7 @@ export default {
     created() {
         if(this.$router.history.current.query.data){
             this.ruleForm = JSON.parse(this.$router.history.current.query.data)
+            this.oimg = JSON.parse(this.$router.history.current.query.data).img
             this.newCreate = false
         }
     },

@@ -19,6 +19,7 @@
                 </p>
             </template>
             <el-form v-if="edit">
+                <el-button @click="edit=false">返回</el-button>
                 <el-form-item label="昵称">
                     <el-input v-model="form.userName" type="text"></el-input>
                 </el-form-item>
@@ -106,8 +107,31 @@ export default {
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    this.$message("提交")
-                    this.resetForm()
+                    let data = this.$qs.stringify({
+                        oldpwd: this.form.oldPwd,
+                        newpwd: this.form.newPwd,
+                        uid: this.user.userUUID
+                    })
+                    this.axios.post("/userController/updpwd", data)
+                    .then(res => {
+                        if(res.data.message){
+                            this.$alert(res.data.message, "提示", {
+                                confirmButtonText: "确定"
+                            })
+                        } else {
+                            this.$alert("修改成功，请重新登录!", "提示", {
+                                confirmButtonText: "确定",
+                                callback: () => {
+                                    this.$store.commit("DELUSER")
+                                    this.$router.push("/login")
+                                }
+                            })
+                        }
+                    }).catch(err => {
+                        this.$alert("修改密码失败，请稍后重试!", "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    })
                 } else {
                     return false;
                 }
@@ -143,6 +167,32 @@ export default {
                     this.$message("请输入正确的手机号码")
                     return 
                 }
+                let data = this.$qs.stringify({
+                    uid: this.user.userUUID,
+                    userName: this.form.userName,
+                    phone: this.form.phone,
+                    img: this.form.avatar
+                })
+                this.axios.post("/userController/updAdmin", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("修改成功!", "提示", {
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.$store.commit('SETUSER', res.data.user)
+                                this.edit = false
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("修改失败，请稍后重试", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
             } else {
                 this.edit = !this.edit
             }

@@ -29,15 +29,15 @@
                         </el-form-item>
                         <br>
                         <el-form-item label="个人描述:">
-                            <span>{{ props.row.consume }}</span>
+                            <span>{{ props.row.introduce }}</span>
                         </el-form-item>
                         <el-form-item label="证件:">
                             <img :src="props.row.IDpass" alt="" preview="1">
                         </el-form-item>
                         <br>
                         <el-form-item label="操作:">
-                            <el-button type="success" size="small" @click="handlePass(props.$index, props.row._id)">通过</el-button>
-                            <el-button type="danger" size="small" @click="handleReject(props.$index, props.row._id)">拒绝</el-button>
+                            <el-button type="success" size="small" @click="handlePass(props.$index, props.row.userUUID)">通过</el-button>
+                            <el-button type="danger" size="small" @click="handleReject(props.$index, props.row.userUUID)">拒绝</el-button>
                         </el-form-item>
                     </el-form>
                 </template>
@@ -67,18 +67,18 @@
                     <el-button
                         size="mini"
                         type="success"
-                        @click="handlePass(scope.$index, scope.row.uid)">通过</el-button>
+                        @click="handlePass(scope.$index, scope.row.userUUID)">通过</el-button>
                     <el-button
                         size="mini"
                         type="danger"
-                        @click="handleReject(scope.$index, scope.row.uid)">拒绝</el-button>
+                        @click="handleReject(scope.$index, scope.row.userUUID)">拒绝</el-button>
                 </template>
             </el-table-column>
         </el-table>
         <el-pagination
         background
         layout="prev, pager, next"
-        :total="1000"
+        :total="total"
         @current-change="currentPageChange">
         </el-pagination>
     </el-main>
@@ -89,18 +89,62 @@ import {ulist} from '@/lib/data.js'
 export default {
     data() {
         return {
-            userData: ulist
+            userData: ulist,
+            page: 1,
+            total: 0,
+            search: ''
         }
     },
     methods: {
-        handlePass(index, _id){
+        getData(){
+            let data = this.$qs.stringify({
+                page: this.page,
+                userName: this.search
+            })
+            this.axios.post("/userController/getAuthUser", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.userData = res.data.userlist
+                    this.total = res.data.total
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
+        handlePass(index, userUUID){
             this.$confirm('确定通过吗?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => {
-                this.$message("已通过")
-            
+                let data = this.$qs.stringify({
+                    uid: userUUID,
+                    pass: 1
+                })
+                this.axios.post("/userController/updAuth", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.userData.splice(index, 1)
+                        this.$message({
+                            message: "已通过",
+                            type: "success"
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("操作失败，请稍后重试", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
             }).catch(() => {
                 this.$message({
                     type: 'info',
@@ -108,12 +152,40 @@ export default {
                 })
             })
         },
-        handleReject(index, _id){
+        handleReject(index, userUUID){
             this.$prompt('请输入拒绝的原因：','提示',{
                 confirmButtonText: '确定',
                 cancelButtonText: '取消'
             }).then(({value}) => {
-                this.$message(value)
+                if(!value.trim()){
+                    this.$alert("请输入拒绝的理由", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                    return
+                }
+                let data = this.$qs.stringify({
+                    uid: userUUID,
+                    pass: 0,
+                    reason: value
+                })
+                this.axios.post("/userController/updAuth", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.userData.splice(index, 1)
+                        this.$message({
+                            message: "已拒绝",
+                            type: "success"
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("操作失败，请稍后重试", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
             }).catch(()=>{
                 this.$message({
                     type: 'warning',
@@ -122,11 +194,15 @@ export default {
             })
         },
         currentPageChange(page){
-            console.log(page)
+            this.page = page
+            this.getData()
         },
         handleSearch(){
-            this.$message(this.search)
+            this.getData()
         },
+    },
+    created() {
+        this.getData()
     },
 }
 </script>

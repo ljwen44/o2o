@@ -28,7 +28,7 @@
                     <template slot-scope="scope">
                         <el-button
                         size="mini"
-                        @click="handleEdit(scope.row._id)">查看</el-button>
+                        @click="handleEdit(scope.row.userUUID, scope.row.type)">查看</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -36,7 +36,7 @@
                 background
                 layout="prev, pager, next"
                 :current-change="pageChange"
-                :total="100">
+                :total="total">
             </el-pagination>
         </el-row>
         <el-row v-else>
@@ -46,11 +46,10 @@
 </template>
 
 <script>
-import {ulist} from '@/lib/data.js'
 export default {
     data() {
         return {
-            userData: ulist,
+            userData: [],
             options: [
                 {
                     value: '',
@@ -67,20 +66,60 @@ export default {
             ],
             value: '',
             search: '',
-            page: 1
+            page: 1,
+            total: 0
         }
     },
     methods: {
-        handleSearch(){
-            this.$message(this.search)
+        getData(value){
+            let data = this.$qs.stringify({
+                type: value,
+                userName: this.search,
+                page: this.page
+            })
+            this.axios.post("/userController/getUserByConditions", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.userData = res.data.userList
+                    this.total = res.data.total
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
         },
-        handleEdit(id){
-            this.$router.push('/admin/user/detail')
+        handleSearch(){
+            this.page = 1
+            this.getData(this.value)
+        },
+        handleEdit(id, type){
+            this.$router.push({
+                path: '/admin/user/detail',
+                query: {
+                    uid: id,
+                    type: type
+                }
+            })
         },
         pageChange(page){
             this.page = page
+            this.getData()
         }
     },
+    created() {
+        this.getData()
+    },
+    watch: {
+        value(newVal, oldVal){
+            this.getData(newVal)
+            return newVal
+        }
+    }
 }
 </script>
 

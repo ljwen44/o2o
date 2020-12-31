@@ -7,20 +7,20 @@
         <el-table
             :data="dataList"
             style="width: 100%">
-            <el-table-column label="id" prop="_id"></el-table-column>
+            <el-table-column label="id" prop="bid"></el-table-column>
             <el-table-column label="标题" prop="title"></el-table-column>
             <el-table-column label="描述" prop="desc"></el-table-column>
-            <el-table-column label="图片" prop="url">
+            <el-table-column label="图片" prop="img">
                 <template slot-scope="scope">
                     <img
                     width="150"
-                    :src="scope.row.url"
+                    :src="scope.row.img"
                     preview="1" />
                 </template>
             </el-table-column>
             <el-table-column label="时间" prop="time">
                 <template slot-scope="scope">
-                    {{scope.row.time | timeFilter("yyyy-MM-dd hh:mm:ss")}}
+                    {{scope.row.btime}}
                 </template>
             </el-table-column>
             <el-table-column align="center" label="操作">
@@ -31,35 +31,86 @@
                     <el-button
                     size="mini"
                     type="danger"
-                    @click="handleDel(scope.$index, scope.row._id)">删除</el-button>
+                    @click="handleDel(scope.$index, scope.row)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination
+            background
+            layout="prev, pager, next"
+            :total="total"
+            style="margin-top:20px; text-align:center;"
+            :current-change="handleChange">
+        </el-pagination>
     </el-row>
 </template>
 
 <script>
-import {bannerImgList} from '@/lib/data.js'
 export default {
     data() {
         return {
-            dataList: bannerImgList
+            dataList: [],
+            page: 1,
+            total: 0
         }
     },
     methods: {
+        getData(){
+            let data = this.$qs.stringify({
+                page: this.page
+            })
+            this.axios.post("/bannerController/getBanners", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.total = res.data.total
+                    this.dataList = res.data.list
+                }
+            }).catch(er => {
+                this.$alert("获取数据异常", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
         handleEdit(index, obj){
             this.$router.push({
                 path: '/admin/index/edit?', 
                 query: {data: JSON.stringify(obj)}
             })
         },
-        handleDel(index, _id){
+        handleDel(index, obj){
             this.$confirm('确定删除吗?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => {
-                this.$message("删除")
+                let data = this.$qs.stringify({
+                    bid: obj.bid,
+                    img: obj.img
+                })
+                this.axios.post("/bannerController/delBanner", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("删除成功!", "提示",{
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.total--
+                                this.dataList.splice(index, 1)
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("删除失败，请刷新重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
             }).catch(() => {
                 this.$message({
                     type: 'info',
@@ -67,6 +118,10 @@ export default {
                 })   
             })
         },
+        handleChange(page){
+            this.page = page
+            this.getData()
+        }
     },
 }
 </script>
