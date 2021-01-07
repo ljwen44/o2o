@@ -6,15 +6,15 @@
                     <h3 style="margin-bottom:10px;">我的积分</h3>
                     <el-tooltip class="item" effect="dark" placement="right">
                         <div slot="content">
-                            累计积分{{user.caclIntegral ? user.caclIntegral : 0}}<br>
+                            累计积分:{{user.caclIntergral ? user.caclIntergral : 0}}<br>
                             青铜: 1000<br>
                             白银: 5000<br>
                             黄金: 12000<br>
                             大师: 20000<br>
                         </div>
-                        <span>当前段位：青铜</span>
+                        <span>当前段位：{{duanArr[active-1]}}</span>
                     </el-tooltip>
-                    <el-steps :active="1" align-center style="margin:10px 0;">
+                    <el-steps :active="active" align-center style="margin:10px 0;">
                         <el-step title="青铜"></el-step>
                         <el-step title="白银"></el-step>
                         <el-step title="黄金"></el-step>
@@ -72,7 +72,7 @@
                 </div>
                 <div class="box">
                     <h3>用户评价</h3>
-                    <el-card>
+                    <el-card v-if="list.length">
                         <div class="content" v-for="(item, index) in list" :key="index">
                             <div class="contentHeader">
                                 <el-avatar :src="item.avatar"></el-avatar>
@@ -91,6 +91,7 @@
                             </div>
                         </div>
                     </el-card>
+                    <p v-else>暂时还没有用户评价</p>
                 </div>
             </el-col>
         </el-row>
@@ -114,17 +115,29 @@
 
 <script>
 import { mapState } from 'vuex'
-import {evaluateList} from '@/lib/data.js'
 export default {
     data() {
         return {
-            list: evaluateList,
+            list: [],
             dialogVisible: false,
             num: '',
+            active: null,
+            duanArr: ['青铜', '白银', '黄金', '大师']
         }
     },
     created() {
         this.user.bir ? '' : this.user.bir = ''
+        let caclIntergral = this.user.caclIntergral
+        if(caclIntergral <= 5000){
+            this.active = 1
+        } else if(caclIntergral > 5000 && caclIntergral <= 12000){
+            this.active = 2
+        } else if(caclIntergral > 12000 && caclIntergral <= 20000){
+            this.active = 3
+        } else {
+            this.active = 4
+        }
+        this.getData()
     },
     computed: {
         ...mapState([
@@ -188,6 +201,28 @@ export default {
                 }
             }).catch(err => {
                 this.$alert("兑换失败，请稍后重试！", "提示",{
+                    confirmButtonText: "确定"
+                })
+            })
+        },
+        getData(){
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID
+            })
+            this.axios.post('/evaluateController/getEvaListByUID', data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.list = res.data.list
+                    this.list.forEach(item => {
+                        item.rate = parseInt(item.rate)
+                    })
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常", "提示", {
                     confirmButtonText: "确定"
                 })
             })

@@ -23,7 +23,7 @@
                     background
                     layout="prev, pager, next"
                     :current-change="handleChange"
-                    :total="1000">
+                    :total="total">
                 </el-pagination>
             </el-col>
         </el-row>
@@ -43,7 +43,8 @@ export default {
             list: alist,
             obj: {},
             minSalary: '',
-            maxSalary: ''
+            maxSalary: '',
+            total: 0
         }
     },
     components: {
@@ -60,12 +61,13 @@ export default {
                 minSalary: this.minSalary,
                 maxSalary: this.maxSalary,
                 page: this.page,
-                type: 0
+                type: 1
             })
             this.axios.post("/jobController/getAllJob", data)
             .then(res => {
                 this.list = res.data.list
                 this.loading = false
+                this.total = res.data.total || 0
             }).catch(err => {
                 this.$alert('获取数据失败，请稍后重试！', "提示", {
                     confirmButtonText: "确定"

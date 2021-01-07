@@ -1,7 +1,8 @@
 <template>
     <el-main>
         <h3>我的好友</h3>
-        <el-row class="frinendList">
+        <p v-if="!list.length">暂时还没有添加任何好友</p>
+        <el-row class="frinendList" v-if="list.length">
             <ul>
                 <li v-for="(item, index) in list" :key="index">
                     <el-card>
@@ -32,13 +33,13 @@
                         </el-row>
                     </el-card>
                 </li>
-            </ul>
-            
+            </ul>          
         </el-row>
         <el-pagination
+            v-if="total"
             background
             layout="prev, pager, next"
-            :total="1000"
+            :total="total"
             :current-change="handleChange">
         </el-pagination>
     </el-main>
@@ -53,6 +54,9 @@ export default {
             page: 1,
             total: 0
         }
+    },
+    created() {
+        this.getData()
     },
     methods: {
         getData(){
@@ -129,6 +133,7 @@ export default {
 <style lang='less' scoped>
 .el-main{
     text-align: left;
+    min-height: 400px;
     h3{
         border-left: 5px solid #3cabcf;
         padding-left: 10px;

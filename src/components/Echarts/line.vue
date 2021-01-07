@@ -8,7 +8,8 @@
 export default {
     name: "lineEcharts",
     props: {
-        time: Array
+        time: Array,
+        echartsData: Object
     },
     data() {
         return {
@@ -30,6 +31,9 @@ export default {
         chinaConfigure() {
             this.chart = this.$echarts.init(this.$refs.lineEchart); //这里是为了获得容器所在位置
             this.chart.setOption({
+                title: {
+                    text: this.echartsData.title || ''
+                },
                 tooltip: {
                     trigger: "axis",
                     textStyle:{
@@ -123,17 +127,19 @@ export default {
                             this.day.push(str)
                         }
                     }
+                    break
                 case '4' || '6' || '9' || '11':
                     for(let i=1; i < 31; i++){
                         let str = month + "-" + i
                         this.day.push(str)
                     }
+                    break
                 default: 
-                    console.log("执行赋值")
                     for(let i=1; i < 32; i++){
                         let str = month + "-" + i
                         this.day.push(str)
                     }
+                    break
             }
         }
     },

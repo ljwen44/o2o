@@ -57,7 +57,6 @@ export default {
             })
             this.axios.post("/jobController/findInfoByUID", data)
             .then(res => {
-                console.log(res.data.list)
                 this.list = res.data.list
             }).catch(err => {
                 this.$alert("获取数据失败，请刷新重试！", "提示", {

@@ -5,7 +5,7 @@
                 <BarCharts></BarCharts>
             </el-col>
             <el-col :sm="12" :md="12">
-                <MapCharts></MapCharts>
+                <UserLineCharts></UserLineCharts>
             </el-col>
         </el-row>
         <el-row style="margin-top:20px;">
@@ -26,9 +26,9 @@
 
 <script>
 import BarLineEcharts from '_c/Echarts/linebar.vue'
-import MapCharts from '_c/Echarts/map.vue'
 import BarCharts from '_c/Echarts/bar.vue'
 import LineCharts from '_c/Echarts/line.vue'
+import UserLineCharts from '_c/Echarts/userLine.vue'
 import { months } from '@/lib/data.js'
 export default{
     data() {
@@ -38,14 +38,13 @@ export default{
         }
     },
     components: {
-        MapCharts,
         BarCharts,
         BarLineEcharts,
-        LineCharts
+        LineCharts,
+        UserLineCharts
     },
     methods: {
         handleChange(){
-            // this.$message(this.selectVal[0]+this.selectVal[1])
             console.log(this.selectVal)
         }
     },

@@ -5,7 +5,7 @@
                 slot="dateCell"
                 slot-scope="{date, data}">
                 <p :class="data.isSelected ? 'is-selected' : ''">
-                    {{ data.day.split('-').slice(1)[1] }} 
+                    {{ data.day.split('-').slice(1)[1] }}
                     <span>{{arr.includes(data.day) ? '✔️' : ''}}</span>
                 </p>
             </template>
@@ -29,7 +29,8 @@ export default {
             flag: false,
             day: 0,
             arr: [],
-            errMsg: ""
+            errMsg: "",
+            
         }
     },
     methods: {
@@ -39,12 +40,14 @@ export default {
             })
             this.axios.post("/signController/getSign", data)
             .then(res => {
+                this.getTime(res.data.list[0])
                 if(res.data.message){
                     this.arr = res.data.message
                 } else {
+                    for(let i = 0; i < res.data.list.length; i++){
+                        res.data.list[i] = this.getTime(res.data.list[i])
+                    }
                     this.arr = res.data.list
-                    let time = this.getTime()
-                    this.flag = this.arr.includes(time)
                 }
             }).catch(err => {
                 this.errMsg = "获取数据异常，请刷新重试!"
@@ -76,12 +79,15 @@ export default {
                 })
             })
         },
-        getTime(){
-            let time = new Date()
+        getTime(obj){
+            let time = new Date(obj)
             let year = time.getFullYear()
             let month = time.getMonth()+1
+            month = month > 10 ? month : "0" + month
             let day = time.getDate()
-            return year +"-"+ month + "-" + day
+            day = day > 10 ? day : "0" + day
+            let res = year +"-"+ month + "-" + day
+            return res
         }
     },
     computed: {
@@ -97,7 +103,7 @@ export default {
             this.day = newVal.length
             return newVal
         }
-    }
+    },
 }
 </script>
 

@@ -49,12 +49,16 @@ export default {
                     this.loading = false
                 } else{
                     this.ulist = res.data.list
+                    this.loading = false
                 }
             }).catch(err => {
                 this.errMsg = "获取数据失败",
                 this.loading = false
             })
         }
+    },
+    created() {
+        this.getData()
     },
 }
 </script>

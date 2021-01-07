@@ -5,8 +5,8 @@
             <p>
                 {{item.userName}}
                 <el-tag type="info" class="flag">
-                    <i class="iconfont icon-renzheng" :style="{color: item.auth ? 'green': 'grey'}">
-                        {{item.auth ? '已认证': '未认证'}}
+                    <i class="iconfont icon-renzheng" :style="{color: item.auth==='已认证' ? 'green': 'grey'}">
+                        {{item.auth}}
                     </i>
                 </el-tag>
             </p>
@@ -31,7 +31,10 @@ export default {
     },
     props: {
         item: Object
-    }
+    },
+    created() {
+        this.item.rate = parseInt(this.item.rate)
+    },
 }
 </script>
 

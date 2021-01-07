@@ -43,6 +43,7 @@ export default {
         }
     },
     created() {
+        this.getData()
     },
     computed: {
         ...mapState([

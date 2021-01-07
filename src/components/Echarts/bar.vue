@@ -59,16 +59,7 @@ export default {
                                 }
                             }
                         },
-                        data: [
-                            {
-                                value: 335,
-                                name: "学员"
-                            },
-                            {
-                                value: 310,
-                                name: "教员"
-                            },
-                        ]
+                        data: this.barData
                     }
                 ]
             })
@@ -76,7 +67,7 @@ export default {
                 this.chart.resize()
             })
         },
-    }
+    },
 }
 </script>
 

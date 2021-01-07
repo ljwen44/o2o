@@ -5,8 +5,7 @@
 const state = {
     user: {
         userName: "",
-        avatar: "images/default.jpg",
-        auth: "0"
+        avatar: "images/default.jpg"
     },
 }
   

@@ -7,8 +7,8 @@
                 </el-avatar>
                 <p style="margin: 10px 0;">{{user.userName}}</p>
                 <el-tag type="info" class="flag" v-if="user.type==='教员'">
-                    <i class="iconfont icon-renzheng" :style="{color: user.auth ? 'green': 'grey'}">
-                        {{user.auth ? '已认证': '未认证'}}
+                    <i class="iconfont icon-renzheng" :style="{color: user.auth==='已认证' ? 'green': 'grey'}">
+                        {{user.auth}}
                     </i>
                 </el-tag>
                 <p style="margin-top:10px;">积分: {{user.integral ? user.integral : 0}}</p>
@@ -101,7 +101,6 @@ export default {
 
 <style lang='less' scoped>
 .el-main{
-    padding: 0;
     .el-col:nth-child(1){
         background:rgba(255,255,255,.5);
         margin-left:10px;

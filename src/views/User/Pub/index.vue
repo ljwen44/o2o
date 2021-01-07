@@ -1,5 +1,7 @@
 <template>
-    <router-view></router-view>
+    <el-main>
+        <router-view></router-view>
+    </el-main>
 </template>
 
 <script>
@@ -13,5 +15,8 @@ export default {
 </script>
 
 <style lang='less' scoped>
-
+.el-main{
+    padding: 0;
+    min-height: 400px;
+}
 </style>

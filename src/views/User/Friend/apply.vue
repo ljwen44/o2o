@@ -33,11 +33,13 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
     data() {
         return {
             list: [],
-            total: 0
+            total: 0,
+            page: 1
         }  
     },
     methods: {
@@ -117,6 +119,14 @@ export default {
             })
         }
     },
+    created() {
+        this.getData()
+    },
+    computed: {
+        ...mapState([
+            'user'
+        ])
+    }
 }
 </script>
 

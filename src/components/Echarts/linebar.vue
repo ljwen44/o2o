@@ -28,7 +28,7 @@ export default {
             this.chart = this.$echarts.init(this.$refs.barlinechart); //这里是为了获得容器所在位置
             this.chart.setOption({
                 title: {
-                    text: "近一周用户活跃情况",
+                    text: "近期用户活跃情况",
                 },
                 tooltip: {
                     trigger: "axis",
@@ -37,7 +37,7 @@ export default {
                     }
                 },
                 legend: {
-                    data: ["学员", "教员", "学员增长人数", "教员增长人数"]
+                    data: ["学员", "教员", "用户在线人数"]
                 },
                 toolbox: {
                     show: true,
@@ -92,15 +92,10 @@ export default {
                         },
                     },
                     {
-                        name: "学员增长人数",
+                        name: "用户在线人数",
                         type: "line",
                         data: [51, 52, 62, 54, 51, 55, 67]
                     },
-                    {
-                        name: "教员增长人数",
-                        type: "line",
-                        data: [124, 46, 76, 55, 43, 62, 40]
-                    }
                 ]
             })
             window.addEventListener('resize', () => {

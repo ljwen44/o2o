@@ -5,7 +5,7 @@
 </template>
 <script>
 import echarts from "echarts"
-import '../../../node_modules/echarts/map/js/china.js' // 引入中国地图数据
+import '../../../node_modules/echarts/map/js/china.js'
 export default {
     name: "mapEcharts",
     props: ["mapData"],
@@ -30,7 +30,7 @@ export default {
             this.chart.setOption({ // 进行相关配置
                 tooltip: {}, // 鼠标移到图里面的浮动提示框
                 title: {
-                    text: "用户分布",
+                    text: "用户期望城市分布",
                     x: "center"
                 },
                 dataRange: {
@@ -69,10 +69,6 @@ export default {
                     }
                 },
                 series: [
-                    {
-                        type: 'scatter',
-                        coordinateSystem: 'geo' // 对应上方配置
-                    },
                     {
                         name: '用户分布', // 浮动框的标题
                         type: 'map',

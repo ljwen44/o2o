@@ -40,6 +40,7 @@
 <script>
 import Chat from '_c/Chat/index.vue'
 import {ulist} from '@/lib/data.js'
+import {mapState} from 'vuex'
 export default {
     data() {
         return {
@@ -52,7 +53,8 @@ export default {
             showDel: false,
             delIndex: 0,
             recuser: {},
-            chatList: ulist
+            chatList: ulist,
+            wsUrl: ''
         }
     },
     methods: {
@@ -68,15 +70,59 @@ export default {
             this.showDel = true
             var e = event || window.event;
             this.pos.left = e.clientX
-            this.pos.top = e.clientY
+            this.pos.top = e.clientYf
+        },
+        init(){
+            // 连接建立时触发
+            this.wsUrl.onopen = () => {
+                console.log("连接成功")
+            }
+            this.wsUrl.onclose = () => {
+                console.log("连接关闭")
+            }
+            // 通信发生错误时触发
+            this.wsUrl.onerror = () => {
+                // 重新创建长连接
+                // this.reconnect();
+                console.log("连接错误")
+            }
+            // 客户端接收服务端数据时触发
+            this.wsUrl.onmessage = msg => {
+                // 业务逻辑处理
+                console.log(msg.data, "ws:data")
+            }
+        },
+        reconnect() {
+            // 没连接上会一直重连，设置延迟避免请求过多
+            setTimeout(() => {
+                this.init(this.wsUrl);
+            }, 2000)
         },
     },
     created() {
         this.recuser = this.chatList[0]
+        if ('WebSocket' in window) {
+            this.wsUrl = new WebSocket("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        } else if ('MozWebSocket' in window) {
+            this.wsUrl = new MozWebSocket("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        } else {
+            this.wsUrl = new SockJS("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        }
+        this.init()
     },
     components: {
         Chat
-    }
+    },
+    computed: {
+        ...mapState([
+            'user'
+        ])
+    },
+    beforeDestroy() {
+        if(this.wsUrl){
+            this.wsUrl.close()
+        }
+    },
 }
 </script>
 
