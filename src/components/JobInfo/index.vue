@@ -2,7 +2,7 @@
     <el-card class="box-card">
         <div class="userWrapper">
             <el-avatar :size="50" :src="item.avatar"></el-avatar>
-            <router-link to="/udetail" class="userName" tag="span">{{item.name}}</router-link>
+            <router-link :to="'/udetail?uid='+item.userUUID" class="userName" tag="span">{{item.name}}</router-link>
         </div>
         <div class="detailWrapper">
             <p>

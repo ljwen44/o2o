@@ -1,6 +1,6 @@
 <template>
     <el-container>
-        <router-link to="/" tag="h3" class="title">韶关学院教务系统</router-link>
+        <router-link to="/" tag="h3" class="title">学生-家教兼职系统</router-link>
         <el-main v-show="!updPwd">
             <el-form :model="form" :rules="rules" ref="form" label-width="60px" label-position="left">
                 <h3>用户登录</h3>
@@ -159,9 +159,16 @@ export default {
                         confirmButtonText: "确定",
                         callback: () => {
                             this.$store.commit('SETUSER', res.data.user)
-                            res.data.user.type === "管理员"
-                            ? this.$router.push('/admin')
-                            : this.$router.push('/')
+                            if(res.data.user.type === "管理员"){
+                                this.$router.push('/admin')
+                            } else {
+                                console.log(res.data.logout)
+                                if(res.data.logout !== undefined){
+                                    this.$store.commit('SETCHAT', JSON.parse(res.data.logout.chat))
+                                    this.$store.commit('SETSIGN', JSON.parse(res.data.logout.sign))
+                                }
+                                this.$router.push('/')
+                            }
                         }
                     })
                 } else {

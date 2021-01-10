@@ -1,31 +1,39 @@
 <template>
     <el-container>
-        <el-main>
+        <el-main v-show="recuser.userName">
             <el-row class="chatHeader">
-                {{recuser.userName || userName}}
+                {{recuser ? recuser.userName : ""}}
             </el-row>
             <el-row class="chatWrapper">
                 <ul ref="chatUL">
-                    <li :class="item.user._id === user._id ?'right':'left'" v-for="(item, index) in list" :key="index">
+                    <li :class="item.userUUID === user.userUUID ?'right':'left'" v-for="(item, index) in list" :key="index">
                         <div>
                             <el-avatar 
                                 shape="square" 
                                 style="cursor: pointer;"
                                 :size="40" 
-                                :src="item.user.avatar" 
-                                @click="toUserDetail(item.user._id)"></el-avatar>
-                            <cite class="userName">{{item.user.userName}}</cite>
+                                :src="item.avatar"></el-avatar>
+                            <cite class="userName">{{item.userName}}</cite>
                         </div>
+                        <span 
+                            class="el-icon-warning-outline" 
+                            style="color: red;cursor: pointer;"
+                            v-if="item.flag && item.flag === '失败'"
+                            @click="sendAgain(item.message, index)"
+                        ></span>
                         <div class="chatContent">
-                            <p v-html="item.desc"></p>
+                            <p v-html="item.message"></p>
                         </div>
                     </li>
                 </ul>
             </el-row>
             <el-row class="sendWrapper">
                 <Editor @content="content" ref="editor"></Editor>
-                <el-button type="success" @click="sendmsg">发送</el-button>
+                <el-button type="success" @click="sendmsg(val)">发送</el-button>
             </el-row>
+        </el-main>
+        <el-main v-show="!recuser.userName" class="nochat">
+            <img src="../../assets/images/chatbg.png" alt="">
         </el-main>
     </el-container>
 </template>
@@ -36,83 +44,153 @@ import {mapState} from 'vuex'
 export default {
     data() {
         return {
-            list: [],
+            list: [], // 聊天记录
             val: '',
-            userName: ''
+            wsUrl: '',
         }
     },
     methods: {
-        // updChat(id){
-        //     this.axios.post("/updChatRead", {
-        //         uid: this.user._id,
-        //         ruid: id
-        //     }).then(res => {
-        //         if(res.data.message === "OK"){
-        //             this.$store.commit('UPDCHATREAD', this.recuser._id)
-        //         }
-        //     }).catch(err => {
-        //         console.log(err)
-        //         this.$message("数据获取异常，请稍后重试！")
-        //     })
-        // },
         ulScroller(){
             setTimeout(()=>{
                 this.$refs.chatUL.scrollTop = this.$refs.chatUL.scrollHeight;
             },0)
         },
+        getData(id){
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID,
+                ruid: id
+            })
+            this.axios.post("/chatController/getChatList", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.list = res.data.list
+                    this.$store.commit("SETCHATREAD", id)
+                    this.ulScroller()
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
+        init(){
+            // 连接建立时触发
+            this.wsUrl.onopen = () => {
+                console.log("连接成功")
+            }
+            this.wsUrl.onclose = () => {
+                console.log("连接关闭")
+            }
+            // 通信发生错误时触发
+            this.wsUrl.onerror = () => {
+                // 重新创建长连接
+                console.log("连接错误")
+                this.reconnect();
+            }
+            // 客户端接收服务端数据时触发
+            this.wsUrl.onmessage = msg => {
+                // 业务逻辑处理
+                msg = JSON.parse(msg.data)
+                if(msg.errMsg === "发送失败"){
+                    this.$message(msg.errMsg)
+                    this.list[this.list.length-1].flag = "失败"
+                } else if(msg.errMsg === "OK") {
+                    let obj = {
+                        message: msg.message,
+                        ctime: msg.time,
+                        userUUID: this.recuser.userUUID
+                    }
+                    this.$store.commit('UPDSENDCHAT', obj)
+                } else {
+                    // 其他用户发送给当前用户
+                    // 1、判断是否是当前窗口聊天对象
+                    // 是则直接加到 list
+                    // 否则修改状态管理器中发送用户的状态
+                    let obj = {
+                        userName: msg.userName,
+                        avatar: msg.avatar,
+                        message: msg.message,
+                        userUUID: msg.userUUID,
+                        time: msg.time, 
+                    }
+                    if(this.recuser.userUUID === msg.userUUID){
+                        this.list.push(obj)
+                        this.$store.commit('UPDCURRENTCHAT', obj)
+                    } else{
+                        this.$store.commit('UPDCHAT', obj)
+                    }
+                }
+                this.ulScroller()
+            }
+        },
+        reconnect() {
+            // 没连接上会一直重连，设置延迟避免请求过多
+            setTimeout(() => {
+                this.init(this.wsUrl);
+            }, 2000)
+        },
         content(obj){
             this.val = obj
         },
-        // toUserDetail(id){
-        //     this.$router.push({
-        //         path: "/userDetail",
-        //         query: {
-        //             _id: id
-        //         }
-        //     })
-        // },
-        // 建立用户连接
-        // join() {
-        //     this.$socket.emit("join", {
-        //         uid: this.user._id,
-        //     })
-        // },
         // 发送消息给后台 用于私发消息
-        sendmsg() {
-            this.$message(this.val)
-            // this.$socket.emit("sendmsg", {
-            //     user: this.user,
-            //     desc: this.val,
-            //     ruser: this.recuser
-            // })
+        sendmsg(val) {
+            this.wsUrl.send(JSON.stringify({
+                ruid: this.recuser.userUUID,
+                uid: this.user.userUUID,
+                message: val,
+                userName: this.user.userName,
+                avatar: this.user.avatar
+            }))
+            let obj = {
+                userUUID: this.user.userUUID,
+                avatar: this.user.avatar,
+                userName: this.user.userName,
+                message: this.val,
+                flag: "成功"
+            }
+            this.list.push(obj)
+            this.$refs.editor.clearContent()
+            this.ulScroller()
+        },
+        sendAgain(val, index){
+            this.$confirm('确认重新发送该消息吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                this.wsUrl.send(JSON.stringify({
+                    ruid: this.recuser.userUUID,
+                    uid: this.user.userUUID,
+                    message: val,
+                    userName: this.user.userName,
+                    avatar: this.user.avatar
+                }))
+                this.list[index].flag = "成功"
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消'
+                })        
+            })
         }
     },
-    // sockets: {
-    //     connect(){
-    //         console.log("socket connected")
-    //     },
-    //     sendMessage(data){
-    //         this.list.push(data)
-    //         this.ulScroller()
-    //         this.$refs.editor.clearContent()
-    //         this.$store.commit('UPDSENDCHAT', data)
-    //     },
-    //     receivemsg(data) {
-    //         if(data.user._id === this.recuser._id){
-    //             // 当前窗口的聊天
-    //             this.list.push(data)
-    //             this.ulScroller()
-    //             this.$refs.editor.clearContent()
-    //             this.$store.commit('UPDRECCHAT', data, true)
-    //         } else {
-    //             // 不是当前窗口的聊天, 只更新聊天列表
-    //             this.$store.commit('UPDRECCHAT', data, false)
-    //         }
-    //     }
-    // },
     created() {
         this.ulScroller()
-        // this.join()
+        if ('WebSocket' in window) {
+            this.wsUrl = new WebSocket("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        } else if ('MozWebSocket' in window) {
+            this.wsUrl = new MozWebSocket("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        } else {
+            this.wsUrl = new SockJS("ws://localhost:8080/o2o/webSocket/"+this.user.userUUID);
+        }
+        this.init()
+        if(this.recuser.userUUID){
+            this.getData(this.recuser.userUUID)
+        }
     },
     components: {
         Editor
@@ -120,22 +198,23 @@ export default {
     computed: {
         ...mapState([
             'user',
+            'chat'
         ])
     },
     props: {
         recuser: Object
     },
-    // watch: {
-    //     recuser(newVal, oldVal){
-    //         if(newVal.user !== undefined){
-    //             newVal = newVal.user
-    //         }
-    //         this.userName = newVal.userName
-    //         this.getData(newVal._id)
-    //         this.updChat(newVal._id)
-    //         return newVal
-    //     },
-    // }
+    watch: {
+        recuser(newVal, oldVal){
+            this.getData(newVal.userUUID)
+            return newVal
+        },
+    },
+    beforeDestroy() {
+        if(this.wsUrl){
+            this.wsUrl.close()
+        }
+    },
 }
 </script>
 
@@ -257,6 +336,14 @@ export default {
                 bottom: 5%;
                 right: 0;
             }
+        }
+    }
+    .nochat{
+        background: #e9f1f9;
+        height: 570px;
+        img{
+            margin: 40% auto;
+            width: 30%;
         }
     }
 }

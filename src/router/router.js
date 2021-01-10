@@ -16,7 +16,10 @@ export const routes = [
         children: [
             {
                 path: "info",
-                component: () => import('@/views/Info/index.vue')
+                component: () => import('@/views/Info/index.vue'),
+                meta: {
+                    title: "首页"
+                }
             },
             {
                 path: "udetail",
@@ -38,13 +41,6 @@ export const routes = [
                         component: () => import('@/views/User/Information/index.vue'),
                         meta: {
                             title: "我的资料"
-                        }
-                    },
-                    {
-                        path: "message",
-                        component: () => import('@/views/User/Message/index.vue'),
-                        meta: {
-                            title: "消息列表"
                         }
                     },
                     {
@@ -155,6 +151,13 @@ export const routes = [
                 meta: {
                     title: "家教详情" 
                 }
+            },
+            {
+                path: "/message",
+                component: () => import("@/views/Message.vue"),
+                meta: {
+                    title: "消息窗口"
+                }
             }
         ]
     },
@@ -242,5 +245,6 @@ export const routes = [
                 }
             }
         ]
-    }
+    },
+    
 ]

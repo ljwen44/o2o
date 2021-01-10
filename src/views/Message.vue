@@ -3,7 +3,7 @@
         <!-- 左边为聊天列表 -->
         <!-- 右边为聊天框 -->
         <el-row>
-            <el-col :sm="6" :md="6" :lg="6" class="userList">
+            <el-col :sm="7" :md="7" :lg="7" class="userList">
                 <el-input
                     placeholder="请输入内容"
                     prefix-icon="el-icon-search"
@@ -16,11 +16,11 @@
                         @contextmenu.prevent="show(index)"
                         :class="index === bgIndex ? 'active' : ''">
                         <el-badge :value="item.readNum === 0 ? '': item.readNum">
-                            <el-avatar shape="square" :size="40" :src="item.user.avatar"></el-avatar>
+                            <el-avatar shape="square" :size="40" :src="item.avatar"></el-avatar>
                         </el-badge>
-                        <p class="userName">{{item.user.userName}}<span>{{item.time | timeFilter('chat')}}</span></p>
+                        <p class="userName">{{item.userName}}<span>{{item.ctime | timeFilter('chat')}}</span></p>
                         <p class="content"
-                            v-html="item.desc.includes('data:image/')?'[图片]':item.desc"></p>
+                            v-html="item.message.includes('data:image/')?'[图片]':item.message"></p>
                         <span 
                             class="tip" 
                             :style="{left: pos.left + 'px',top: pos.top + 'px'}"
@@ -30,7 +30,7 @@
                     </li>
                 </ul>
             </el-col>
-            <el-col :sm="18" :md="18" :lg="18">
+            <el-col :sm="17" :md="17" :lg="17">
                 <Chat :recuser="recuser"></Chat>
             </el-col>
         </el-row>
@@ -69,37 +69,48 @@ export default {
             this.pos.left = e.clientX
             this.pos.top = e.clientYf
         },
+        getData(){
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID
+            })
+            this.axios.post("/chatController/getNoReadList", data)
+            .then(res => {
+                if(res.data.list.length){
+                    this.$store.commit('UPDMSGCHAT', res.data.list)
+                }
+            }).catch(err => {
+                this.$alert("获取数据异常，请刷新重试", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        }
     },
     created() {
         let userquery = this.$router.history.current.query.user
         let flag = false // 标记是否有在聊天列表里面
         if(userquery !== undefined){
             let newuser = JSON.parse(userquery)
-            console.log(newuser)
             this.recuser = newuser
-            for(let i=0; i < this.chat.length; i++){
-                if(this.chat[i].user.userUUID === newuser.userUUID){
-                    let temp = {
-                        user: newuser,
-                        desc: this.chat[i].desc,
-                        time: this.chat[i].time
-                    }
-                    this.chat.splice(i, 1)
-                    this.chat.unshift(temp)
+            for(let i = 0; i < this.chat.length; i++){
+                if(this.chat[i].userUUID === newuser.userUUID){
                     flag = true
                     break
                 }
             }
             if(!flag){
                 let obj = {
-                    user: newuser,
-                    desc: '',
-                    time: ''
+                    userUUID: newuser.userUUID,
+                    message: '',
+                    ctime: '',
+                    userName: newuser.userName,
+                    readNum: 0,
+                    avatar: newuser.avatar
                 }
                 this.$store.commit('ADDCHAT', obj)
             }
             this.recuser = newuser
         }
+        this.getData()
     },
     components: {
         Chat
@@ -115,7 +126,7 @@ export default {
 
 <style lang='less' scoped>
 .el-main{
-    padding: 0;
+    padding: 0 20px;
     overflow: hidden;
     min-height: 400px;
     .el-row{

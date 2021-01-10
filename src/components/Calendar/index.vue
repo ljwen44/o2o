@@ -6,16 +6,15 @@
                 slot-scope="{date, data}">
                 <p :class="data.isSelected ? 'is-selected' : ''">
                     {{ data.day.split('-').slice(1)[1] }}
-                    <span>{{arr.includes(data.day) ? '✔️' : ''}}</span>
+                    <span>{{sign.includes(data.day) ? '✔️' : ''}}</span>
                 </p>
             </template>
         </el-calendar>
         <div style="text-align: left">
             <el-button size="small" 
-                :type="flag?'info':'primary'"
-                :disabled="flag" 
-                @click="sign">{{flag?"已签到":"签到"}}</el-button>
-            <span style="font-size: 14px;">已签到{{day}}天</span>
+                :type="sign.includes(time)?'info':'primary'"
+                :disabled="sign.includes(time)" 
+                @click="handleSign">{{sign.includes(time)?"已签到":"签到"}}</el-button>
             <p v-if="!errMsg">{{errMsg}}</p>
         </div>
     </el-main>
@@ -27,10 +26,8 @@ export default {
     data() {
         return {
             flag: false,
-            day: 0,
-            arr: [],
             errMsg: "",
-            
+            time: '',
         }
     },
     methods: {
@@ -40,22 +37,18 @@ export default {
             })
             this.axios.post("/signController/getSign", data)
             .then(res => {
-                this.getTime(res.data.list[0])
                 if(res.data.message){
-                    this.arr = res.data.message
+                    this.errMsg = res.data.message
                 } else {
-                    for(let i = 0; i < res.data.list.length; i++){
-                        res.data.list[i] = this.getTime(res.data.list[i])
-                    }
-                    this.arr = res.data.list
+                    this.$store.commit('SETSIGN', res.data.list)
                 }
             }).catch(err => {
                 this.errMsg = "获取数据异常，请刷新重试!"
             })
         },
-        sign(){
+        handleSign(){
             let data = this.$qs.stringify({
-                uid: this.userUUID
+                uid: this.user.userUUID
             })
             this.axios.post("/signController/addSign", data)
             .then(res => {
@@ -66,10 +59,9 @@ export default {
                         confirmButtonText: "确定",
                         callback: () => {
                             this.flag = true
-                            let time = this.getTime()
-                            this.arr.push(time)
                             this.user.integral = this.user.integral + 5
                             this.$store.commit("SETUSER", this.user)
+                            this.$store.commit('ADDSIGN', this.time)
                         }
                     })
                 }
@@ -79,29 +71,30 @@ export default {
                 })
             })
         },
-        getTime(obj){
-            let time = new Date(obj)
+        getTime(){
+            let time = new Date()
             let year = time.getFullYear()
             let month = time.getMonth()+1
-            month = month > 10 ? month : "0" + month
+            month = month < 10 ? "0" + month : month
             let day = time.getDate()
-            day = day > 10 ? day : "0" + day
+            day = day < 10 ? "0" + day : day
             let res = year +"-"+ month + "-" + day
             return res
         }
     },
     computed: {
         ...mapState([
-            'user'
+            'user',
+            'sign'
         ])
     },
     created() {
-        this.getData()
-    },
-    watch: {
-        arr(newVal, oldVal){
-            this.day = newVal.length
-            return newVal
+        this.time = this.getTime()
+        let localsign = localStorage.getItem('_o2o_sign')
+        if(!localsign && this.user){
+            this.getData()
+        } else {
+            this.$store.commit('SETSIGN', JSON.parse(localsign))
         }
     },
 }

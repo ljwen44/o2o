@@ -29,10 +29,16 @@
             </el-row>
             <el-button 
                 type="success" 
-                style="margin-bottom: 20px;"
-                v-if="!user.userUUID === queryUser.userUUID"
+                style="margin-bottom: 20px; margin-right: 20px;"
+                v-if="user.userUUID !== queryUser.userUUID"
                 @click="handleClick"
                 >添加好友</el-button>
+            <el-button 
+                type="default" 
+                style="margin-bottom: 20px;"
+                v-if="user.userUUID !== queryUser.userUUID"
+                @click="toMessage"
+                >联系他</el-button>
             <el-row>
                 <div class="box">
                     <h3>用户评价</h3>
@@ -102,7 +108,51 @@ export default {
             })
         },
         handleClick(){
-            console.log(1)
+            this.$prompt('请输入备注', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(({ value }) => {
+                let data = this.$qs.stringify({
+                    uid: this.user.userUUID,
+                    ruid: this.queryUser.userUUID,
+                    desc: value
+                })
+                this.axios.post("/applyController/addApplyByUID", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("申请成功，等待对方同意", "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    }
+                }).catch(err => {
+                    console.log(err)
+                    this.$alert("添加失败，请稍后重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消申请'
+                })   
+            })
+        },
+        toMessage(){
+            let user1 = {
+                userName: this.queryUser.userName,
+                avatar: this.queryUser.avatar,
+                userUUID: this.queryUser.userUUID
+            }
+            this.$router.push({
+                path: "/message",
+                query: {
+                    user: JSON.stringify(user1)
+                }
+            })
         }
     },
 }

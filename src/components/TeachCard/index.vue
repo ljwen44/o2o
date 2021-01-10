@@ -2,14 +2,14 @@
     <el-card class="box-card">
         <el-avatar :size="40" :src="item.avatar" shape="square"></el-avatar>
         <div class="userInfoWrapper">
-            <p>
+            <router-link tag="p" :to="'/udetail?uid=' + item.userUUID">
                 {{item.userName}}
-                <el-tag type="info" class="flag">
+                <el-tag tyrouter-linke="info" class="flag">
                     <i class="iconfont icon-renzheng" :style="{color: item.auth==='已认证' ? 'green': 'grey'}">
                         {{item.auth}}
                     </i>
                 </el-tag>
-            </p>
+            </router-link>
             <p>
                 <el-rate
                 v-model="item.rate"

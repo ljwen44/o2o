@@ -22,10 +22,6 @@
                     <i class="el-icon-document"></i>
                     <span slot="title">我的资料</span>
                 </el-menu-item>
-                <el-menu-item index="/user/message">
-                    <i class="el-icon-chat-dot-round"></i>
-                    <span slot="title">消息列表</span>
-                </el-menu-item>
                 <el-submenu index="/user/friend">
                     <template slot="title">
                         <i class="el-icon-user"></i>
@@ -101,6 +97,7 @@ export default {
 
 <style lang='less' scoped>
 .el-main{
+    padding: 0;
     .el-col:nth-child(1){
         background:rgba(255,255,255,.5);
         margin-left:10px;

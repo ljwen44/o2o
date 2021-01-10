@@ -55,7 +55,7 @@ export default {
                 this.errMsg = "获取数据失败",
                 this.loading = false
             })
-        }
+        },
     },
     created() {
         this.getData()

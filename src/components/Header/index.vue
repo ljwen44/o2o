@@ -8,11 +8,12 @@
             </el-col>
             <el-col :xs="18" :sm="14" :md="18" :lg="18" :xl="22" class="loginBox">
                 <router-link to="/login" tag="span" v-if="!user.userName" class="login">登录</router-link>
-                <div class="userInfoWrapper" v-else @click="goUser">
+                <div class="userInfoWrapper" v-else>
                     <el-avatar :size="40" :src="user.avatar" @error="errorHandler">
                         <img src="images/default.jpg"/>
                     </el-avatar>
-                    <span>{{user.userName}}</span>
+                    <router-link to="/user" tag="span" style="margin-right: 20px;">{{user.userName}}</router-link>
+                    <router-link to="/message" tag="span">消息</router-link>
                 </div>
                 <span @click="logout" class="logout" v-if="user.userName">退出</span>
             </el-col>
@@ -38,8 +39,32 @@ export default {
                 cancelButtonText: '取消',
                 type: 'primary'
             }).then(() => {
-                this.$store.commit('DELUSER')
-                this.$router.push('/login')
+                let data = this.$qs.stringify({
+                    uid: this.user.userUUID,
+                    chat: JSON.stringify(this.chat),
+                    sign: JSON.stringify(this.sign)
+                })
+                this.axios.post("/loginController/logout", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("退出成功!", "提示", {
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.$store.commit('DELUSER')
+                                this.$router.push('/login')
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    console.log(err)
+                    this.$alert("退出失败，请刷新重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
             }).catch(() => {
                 this.$message({
                     type: 'info',
@@ -53,13 +78,23 @@ export default {
     },
     computed: {
         ...mapState([
-            'user'
+            'user',
+            'chat',
+            'sign'
         ])
     },
     created() {
         let localUser = localStorage.getItem('_o2o_user')
         if(localUser){
             this.$store.commit('SETUSER', JSON.parse(localUser))
+        }
+        let localChat = localStorage.getItem("_o2o_chat")
+        if(localChat){
+            this.$store.commit('SETCHAT', JSON.parse(localChat))
+        }
+        let localsign = localStorage.getItem('_o2o_sign')
+        if(localsign){
+            this.$store.commit('SETSIGN', JSON.parse(localsign))
         }
     }
 }

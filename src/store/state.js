@@ -7,6 +7,8 @@ const state = {
         userName: "",
         avatar: "images/default.jpg"
     },
+    chat: [],
+    sign: []
 }
   
 export default state
