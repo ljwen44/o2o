@@ -1,8 +1,8 @@
 <template>
     <el-main>
         <h3>我的好友</h3>
-        <p v-if="!list.length">暂时还没有添加任何好友</p>
-        <el-row class="frinendList" v-if="list.length">
+        <p v-if="hidden">暂时还没有添加任何好友</p>
+        <el-row class="frinendList" v-if="list.length" v-loading="loading">
             <ul>
                 <li v-for="(item, index) in list" :key="index">
                     <el-card>
@@ -22,10 +22,10 @@
                                 <el-button 
                                     type="primary" 
                                     size="mini" 
-                                    @click="handleChat(item.ruid === user.userUUID ? item.uid : item.ruid)"
+                                    @click="handleChat(item)"
                                 >聊天</el-button>
                                 <el-button 
-                                    @click="handleDel(item.fid, index)" 
+                                    @click="handleDel(item.fid, item.userUUID, index)" 
                                     size="mini" 
                                     style="margin-left:0;margin-top:5px;"
                                 >删除</el-button>
@@ -36,11 +36,11 @@
             </ul>          
         </el-row>
         <el-pagination
-            v-if="total"
+            v-if="list.length"
             background
             layout="prev, pager, next"
             :total="total"
-            :current-change="handleChange">
+            @current-change="handleChange">
         </el-pagination>
     </el-main>
 </template>
@@ -52,7 +52,9 @@ export default {
         return {
             list: [],
             page: 1,
-            total: 0
+            total: 0,
+            loading: true,
+            hidden: false
         }
     },
     created() {
@@ -73,6 +75,7 @@ export default {
                 } else {
                     this.list = res.data.list
                     this.total = res.data.total || 0
+                    this.loading = false
                 }
             }).catch(err => {
                 this.$alert("获取数据异常", "提示", {
@@ -84,17 +87,29 @@ export default {
             this.page = page
             this.getData()
         },
-        handleChat(id){
-            this.$message("聊天")
+        handleChat(obj){
+            let userObj = {
+                userName: obj.userName,
+                avatar: obj.avatar,
+                userUUID: obj.userUUID
+            }
+            this.$router.push({
+                path: "/message",
+                query: {
+                    user: JSON.stringify(userObj)
+                }
+            })
         },
-        handleDel(id, index){
+        handleDel(id, uid, index){
             this.$confirm('确认删除该好友吗', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => {
                 let data = this.$qs.stringify({
-                    fid: id
+                    fid: id,
+                    uid: this.user.userUUID,
+                    ruid: uid
                 })
                 this.axios.post("/friendController/delFriendByFID", data)
                 .then(res => {
@@ -126,6 +141,14 @@ export default {
         ...mapState([
             'user'
         ])
+    },
+    watch: {
+        list(newVal, oldVal){
+            if(newVal.length === 0){
+                this.hidden = true
+            }
+            return newVal
+        }
     }
 }
 </script>

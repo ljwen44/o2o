@@ -39,6 +39,10 @@ export default {
                     label: "全部"
                 },
                 {
+                    value: "未接单",
+                    label: "未接单"
+                },
+                {
                     value: "进行中",
                     label: "进行中"
                 },

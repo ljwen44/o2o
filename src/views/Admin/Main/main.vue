@@ -5,11 +5,12 @@
             <el-button type="primary">新建</el-button>
         </router-link>
         <el-table
+            v-loading="loading"
             :data="dataList"
             style="width: 100%">
             <el-table-column label="id" prop="bid"></el-table-column>
             <el-table-column label="标题" prop="title"></el-table-column>
-            <el-table-column label="描述" prop="desc"></el-table-column>
+            <el-table-column label="描述" prop="content"></el-table-column>
             <el-table-column label="图片" prop="img">
                 <template slot-scope="scope">
                     <img
@@ -37,10 +38,11 @@
         </el-table>
         <el-pagination
             background
+            v-if="dataList.length"
             layout="prev, pager, next"
             :total="total"
             style="margin-top:20px; text-align:center;"
-            :current-change="handleChange">
+            @current-change="handleChange">
         </el-pagination>
     </el-row>
 </template>
@@ -51,8 +53,12 @@ export default {
         return {
             dataList: [],
             page: 1,
-            total: 0
+            total: 0,
+            loading: true
         }
+    },
+    created() {
+        this.getData()
     },
     methods: {
         getData(){
@@ -68,6 +74,7 @@ export default {
                 } else {
                     this.total = res.data.total
                     this.dataList = res.data.list
+                    this.loading = false
                 }
             }).catch(er => {
                 this.$alert("获取数据异常", "提示", {

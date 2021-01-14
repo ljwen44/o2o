@@ -2,8 +2,14 @@
     <el-main>
         <JobInfo :item="item"></JobInfo>
         <h3>进度安排</h3>
-        <el-button type="primary" size="small" @click="addprogress">增加进度</el-button>
-        <el-row v-if="flag" class="row">
+        <el-button 
+            v-if="flag==='进行中'"
+            type="primary" 
+            size="small" 
+            @click="cancelOrder" 
+            style="margin-left: 20px;"
+            >取消订单</el-button>
+        <el-row v-if="flag === '进行中'" class="row">
             <el-input
                 type="textarea"
                 resize="none"
@@ -18,13 +24,12 @@
             <el-timeline-item
                 v-for="(item, index) in list"
                 :key="index"
-                :timestamp="item.pptime">
+                :timestamp="item.ppTime"
+                placement="top">
                 {{item.content}}
             </el-timeline-item>
         </el-timeline>
-        <el-button :type="finish ? 'info' : 'primary'" @click="handleFinish" :disabled="finish">
-            {{finish? "已完成" :"完成家教"}}
-        </el-button>
+        <p v-if="!list.length" style="margin-bottom: 20px;">暂时还没有发布任何进度安排</p>
         <el-button @click="goback">返回</el-button>
     </el-main>
 </template>
@@ -39,12 +44,14 @@ export default {
             list: [],
             flag: false,
             value: '',
-            finish: false
+            oid: '',
+            pid: ''
         }
     },
     created() {
         this.oid = this.$router.history.current.query.oid
         this.pid = this.$router.history.current.query.pid
+        this.getData(this.pid)
     },
     methods: {
         getData(pid){
@@ -54,6 +61,7 @@ export default {
             })
             this.axios.post("/orderController/getOrderDetail", data)
             .then(res => {
+                console.log(res.data)
                 if(res.data.message){
                     this.$alert(res.data.message, "提示", {
                         confirmButtonText: "确定"
@@ -61,15 +69,13 @@ export default {
                 } else {
                     this.item = res.data.item
                     this.list = res.data.progressList
+                    this.flag = res.data.ostatus
                 }
             }).catch(err => {
                 this.$alert("获取数据异常，请刷新重试!", "提示", {
                     confirmButtonText: "确定"
                 })
             })
-        },
-        addprogress(){
-            this.flag = true
         },
         goback(){
             this.$router.history.go(-1)
@@ -94,7 +100,6 @@ export default {
                         confirmButtonText: "确定",
                         callback: () => {
                             this.value = ''
-                            this.flag = false
                             this.list.unshift(res.data.progress)
                         }
                     })
@@ -105,8 +110,41 @@ export default {
                 })
             })
         },
-        handleFinish(){
-            this.finish = true
+        cancelOrder(){
+            this.$confirm('您确定取消订单吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                let data = this.$qs.stringify({
+                    oid: this.oid,
+                    pid: this.pid
+                })
+                this.axios.post("/orderController/delOrder", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("已取消订单", "提示", {
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.$router.push("/user/order/finish")
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("取消失败，请刷新重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消操作'
+                })       
+            })
         }
     },
     components: {
@@ -118,6 +156,7 @@ export default {
 <style lang='less' scoped>
 .el-main{
     text-align: left;
+    padding: 20px;
     h3{
         border-left: 5px solid #3cabcf;
         padding-left: 10px;

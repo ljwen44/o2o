@@ -62,12 +62,12 @@
                         <el-button type="primary" style="margin-left: 10px; margin-top:10px;">编辑资料</el-button>
                     </router-link>
                     <el-button 
-                        :type="user.auth ? 'info':'success'" 
-                        :disabled="user.auth ? true : false"
+                        :type="user.auth !== '未认证' ? 'info':'success'" 
+                        :disabled="user.auth !== '未认证' ? true : false"
                         v-if="user.type==='教员'"
                         style="margin-left: 10px; margin-top:10px;"
                         @click="handleAuth">
-                        {{user.auth ? "已认证": "申请认证"}}
+                        {{user.auth !== '未认证' ? "已认证": "申请认证"}}
                     </el-button>
                 </div>
                 <div class="box">
@@ -76,9 +76,9 @@
                         <div class="content" v-for="(item, index) in list" :key="index">
                             <div class="contentHeader">
                                 <el-avatar :src="item.avatar"></el-avatar>
-                                <span class="name">{{item.name}}</span>
+                                <span class="name">{{item.userName}}</span>
                                 <el-rate
-                                    v-model="item.rate"
+                                    v-model="item.erate"
                                     disabled
                                     show-score
                                     text-color="#ff9900"
@@ -86,8 +86,8 @@
                                 </el-rate>
                             </div>
                             <div class="contentBody">
-                                <p>{{item.desc}}</p>
-                                <p><i class="el-icon-time"></i>{{item.time | timeFilter('yyyy-MM-dd')}}</p>
+                                <p>{{item.content}}</p>
+                                <p><i class="el-icon-time"></i>{{item.etime | timeFilter('yyyy-MM-dd')}}</p>
                             </div>
                         </div>
                     </el-card>
@@ -146,24 +146,25 @@ export default {
     },
     methods: {
         handleAuth(){
-            if(this.user.authStatus === 1){
+            if(this.user.authStatus === "已申请"){
                 this.$alert("您已申请认证，请等待管理员处理", "提示", {
                     confirmButtonText: "确定"
                 })
             } else {
-                this.axios.post("/updAuthStatus", {
-                    _id: this.user._id,
-                    authStatus: 1
-                }).then(res => {
-                    if(res.data.message === "OK"){
-                        this.$alert("申请成功！等待管理员处理", "提示", {
+                let data = this.$qs.stringify({
+                    uid: this.user.userUUID
+                })
+                this.axios.post("/userController/updAuthStatus", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
                             confirmButtonText: "确定",
                             callback: () => {
                                 this.$store.commit('SETUSER', res.data.user)
                             }
                         })
                     } else {
-                        this.$alert(res.data.message, "提示", {
+                        this.$alert("申请成功，等待管理员审核", "提示", {
                             confirmButtonText: "确定"
                         })
                     }
@@ -217,9 +218,9 @@ export default {
                     })
                 } else {
                     this.list = res.data.list
-                    this.list.forEach(item => {
-                        item.rate = parseInt(item.rate)
-                    })
+                    for(let i = 0; i < this.list.length; i++){
+                        this.list[i].erate = parseInt(this.list[i].erate)
+                    }
                 }
             }).catch(err => {
                 this.$alert("获取数据异常", "提示", {

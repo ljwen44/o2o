@@ -59,7 +59,7 @@ export default {
                         confirmButtonText: "确定",
                         callback: () => {
                             this.flag = true
-                            this.user.integral = this.user.integral + 5
+                            this.user.integral = parseInt(this.user.integral) + 5
                             this.$store.commit("SETUSER", this.user)
                             this.$store.commit('ADDSIGN', this.time)
                         }

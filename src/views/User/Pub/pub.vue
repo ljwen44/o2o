@@ -22,31 +22,11 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="薪资待遇" required>
-                <el-col :span="11">
-                    <el-form-item prop="minSalary">
-                        <el-input v-model="ruleForm.minSalary"></el-input>
-                    </el-form-item>
-                </el-col>
-                <el-col class="line" :span="2" style="text-align: center;">-</el-col>
-                <el-col :span="11">
-                    <el-form-item prop="maxSalary">
-                        <el-input v-model="ruleForm.maxSalary"></el-input>
-                    </el-form-item>
-                </el-col>
+            <el-form-item label="薪资待遇" prop="salary">
+                <el-input v-model="ruleForm.salary" placeholder="请输入薪资" style="width: 30%;"></el-input>
             </el-form-item>
-            <el-form-item label="起止时间" required>
-                <el-col :span="11">
-                    <el-form-item prop="startTime">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.startTime" style="width: 100%;"></el-date-picker>
-                    </el-form-item>
-                </el-col>
-                <el-col class="line" :span="2" style="text-align: center;">-</el-col>
-                <el-col :span="11">
-                    <el-form-item prop="endTime">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.endTime" style="width: 100%;"></el-date-picker>
-                    </el-form-item>
-                </el-col>
+            <el-form-item label="维持天数" prop="day">
+                <el-input-number v-model="ruleForm.day"  :min="1" :max="30"></el-input-number>
             </el-form-item>
             <el-form-item label="内容描述" prop="desc">
                 <el-input 
@@ -84,13 +64,11 @@ export default {
                 city: '',
                 block: '',
                 address: '',
-                startTime: '',
-                endTime: '',
                 desc: '',
-                minSalary: '',
-                maxSalary: '',
+                salary: '',
                 record: '本科',
-                phone: ''
+                phone: '',
+                day: ''
             },
             rules: {
                 name: [
@@ -104,23 +82,17 @@ export default {
                 address: [
                     { required: true, message: '请填写地址', trigger: 'change' }
                 ],
-                minSalary: [
-                    { required: true, message: '请填写工资区间', trigger: 'blur' }
-                ],
-                maxSalary: [
-                    { required: true, message: '请填写工资区间', trigger: 'blur' }
-                ],
-                startTime: [
-                    { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
-                ],
-                endTime: [
-                    { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+                salary: [
+                    { required: true, message: '请填写薪资', trigger: 'blur' }
                 ],
                 desc: [
                     { required: true, message: '请填写内容描述', trigger: 'blur' }
                 ],
                 record: [
                     { required: true, message: '请选择学历', trigger: 'blur' },
+                ],
+                day: [
+                    { required: true, message: '请填写天数', trigger: 'blur' },
                 ],
             },
             options: [
@@ -144,6 +116,13 @@ export default {
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
+                    let totalCoin = parseInt(this.ruleForm.salary) * parseInt(this.ruleForm.day)
+                    if(this.user.coin < totalCoin){
+                        this.$alert("您的学币不够，请充值后再发布", "提示", {
+                            confirmButtonText: "确定"
+                        })
+                        return
+                    }
                     let data = this.$qs.stringify({
                         uid: this.user.userUUID,
                         userName: this.ruleForm.name,
@@ -152,12 +131,10 @@ export default {
                         city: this.ruleForm.city,
                         block: this.ruleForm.block,
                         address: this.ruleForm.address,
-                        minSalary: this.ruleForm.minSalary,
-                        maxSalary: this.ruleForm.maxSalary,
-                        startTime: this.ruleForm.startTime,
-                        endTime: this.ruleForm.endTime,
+                        salary: this.ruleForm.salary,
                         content: this.ruleForm.desc,
-                        precord: this.ruleForm.record
+                        precord: this.ruleForm.record,
+                        day: this.ruleForm.day
                     })
                     this.axios.post("/jobController/addJob", data)
                     .then(res => {
@@ -169,6 +146,8 @@ export default {
                             this.$alert("发布成功!", "提示", {
                                 confirmButtonText: "确定",
                                 callback: () => {
+                                    this.user.coin -= totalCoin
+                                    this.$store.commit("SETUSER", this.user)
                                     this.resetForm('ruleForm')
                                     this.$router.push("/user/pjob/mypub/index")
                                 }

@@ -10,8 +10,7 @@
                     </el-col>
                     <el-col class="typeBox" :sm="8" :md="8" :lg="8">
                         <span>薪资:</span>
-                        <el-input v-model="minSalary" oninput="value=value.replace(/^\.+|[^\d.]/g,'')"></el-input> - 
-                        <el-input v-model="maxSalary" oninput="value=value.replace(/^\.+|[^\d.]/g,'')"></el-input>
+                        <el-input v-model="salary" oninput="value=value.replace(/^\.+|[^\d.]/g,'')"></el-input>
                     </el-col>
                     <el-col class="typeBox" :sm="3" :md="3" :lg="3">
                         <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -25,6 +24,7 @@
                 </ul>
                 <el-pagination
                     background
+                    v-if="list.length"
                     layout="prev, pager, next"
                     @current-change="handleChange"
                     :total="total"
@@ -46,8 +46,7 @@ export default {
             page: 1,
             list: [],
             obj: {},
-            minSalary: '',
-            maxSalary: '',
+            salary: '',
             total: 0,
             search: false
         }
@@ -79,8 +78,7 @@ export default {
                 province: this.obj.province,
                 city: this.obj.city,
                 block: this.obj.block,
-                minSalary: this.minSalary,
-                maxSalary: this.maxSalary,
+                salary: this.salary,
                 page: this.page,
                 type: 1
             })

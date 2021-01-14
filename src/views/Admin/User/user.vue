@@ -23,7 +23,7 @@
                 <el-table-column label="手机号码" prop="phone"></el-table-column>
                 <el-table-column label="邮箱" prop="email"></el-table-column>
                 <el-table-column label="类型" prop="type"></el-table-column>
-                <el-table-column label="注册时间" prop="regtime"></el-table-column>v
+                <el-table-column label="注册时间" prop="regTime"></el-table-column>v
                 <el-table-column align="center" label="操作">
                     <template slot-scope="scope">
                         <el-button

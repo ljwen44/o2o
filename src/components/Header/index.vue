@@ -86,7 +86,13 @@ export default {
     created() {
         let localUser = localStorage.getItem('_o2o_user')
         if(localUser){
-            this.$store.commit('SETUSER', JSON.parse(localUser))
+            let user = JSON.parse(localUser)
+            if(user.type === "管理员"){
+                this.$store.commit('SETUSER', user)
+                this.$router.push("/admin")
+            } else {
+                this.$store.commit('SETUSER', user)
+            }
         }
         let localChat = localStorage.getItem("_o2o_chat")
         if(localChat){

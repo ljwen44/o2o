@@ -113,7 +113,7 @@ export default {
     created() {
         this.uid = this.$router.history.current.query.uid
         this.type = this.$router.history.current.query.type
-        this.getData()
+        // this.getData()
     },
 }
 </script>

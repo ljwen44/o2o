@@ -162,7 +162,6 @@ export default {
                             if(res.data.user.type === "管理员"){
                                 this.$router.push('/admin')
                             } else {
-                                console.log(res.data.logout)
                                 if(res.data.logout !== undefined){
                                     this.$store.commit('SETCHAT', JSON.parse(res.data.logout.chat))
                                     this.$store.commit('SETSIGN', JSON.parse(res.data.logout.sign))

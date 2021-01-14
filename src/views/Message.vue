@@ -56,7 +56,7 @@ export default {
     },
     methods: {
         del(){
-            this.$store.commit('DELCHAT', delIndex)
+            this.$store.commit('DELCHAT', this.delIndex)
         },
         handleClick(index, item){
             this.bgIndex = index
@@ -90,6 +90,7 @@ export default {
         let flag = false // 标记是否有在聊天列表里面
         if(userquery !== undefined){
             let newuser = JSON.parse(userquery)
+            console.log(newuser)
             this.recuser = newuser
             for(let i = 0; i < this.chat.length; i++){
                 if(this.chat[i].userUUID === newuser.userUUID){
@@ -106,6 +107,7 @@ export default {
                     readNum: 0,
                     avatar: newuser.avatar
                 }
+                console.log("message --> " + newuser.userUUID)
                 this.$store.commit('ADDCHAT', obj)
             }
             this.recuser = newuser

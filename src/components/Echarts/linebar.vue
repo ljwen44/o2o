@@ -7,14 +7,19 @@
 <script>
 export default {
     name: "barlinecharts",
-    props: ["barData"],
+    // props: ["barData"],
     data() {
         return {
-            chart: null
-        };
+            chart: null,
+            time: [],
+            stuList: [],
+            teaList: [],
+            sign: []
+        }
     },
     mounted() {
-        this.chinaConfigure();
+        this.chinaConfigure()
+        this.getData()
     },
     beforeDestroy() {
         if (!this.chart) {
@@ -54,7 +59,7 @@ export default {
                 xAxis: [
                     {
                         type: "category",
-                        data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月"]
+                        data: []
                     },
                     {
                         type: "category",
@@ -74,7 +79,7 @@ export default {
                     {
                         name: "学员",
                         type: "bar",
-                        data: [2, 4.9, 7, 23.2, 25.6, 76.7, 135.6],
+                        data: [],
                         itemStyle: {
                             normal: {
                                 color: '#05c3e7'
@@ -84,7 +89,7 @@ export default {
                     {
                         name: "教员",
                         type: "bar",
-                        data: [2.6, 5.9, 9, 26.4, 28.7, 70.7, 175.6],
+                        data: [],
                         itemStyle: {
                             normal: {
                                 color: '#3e8b9a'
@@ -94,7 +99,7 @@ export default {
                     {
                         name: "用户在线人数",
                         type: "line",
-                        data: [51, 52, 62, 54, 51, 55, 67]
+                        data: []
                     },
                 ]
             })
@@ -102,6 +107,53 @@ export default {
                 this.chart.resize()
             })
         },
+        getData(){
+            this.chart.showLoading()
+            this.axios.post("/adminController/getBarLineByDate")
+            .then(res => {
+                console.log(res.data)
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    for (let index = 0; index < res.data.stuList.length; index++) {
+                        this.stuList.unshift(res.data.stuList[index].value)
+                        this.time.unshift(res.data.stuList[index].time)
+                        this.teaList.unshift(res.data.teaList[index].value)
+                        this.sign.unshift(res.data.userSignList[index].value)
+                    }
+                    this.chart.setOption({
+                        xAxis: [
+                            {
+                                type: "category",
+                                data: this.time
+                            },
+                        ],
+                        series: [
+                            {
+                                name: "学员",
+                                data: this.stuList
+                            },
+                            {
+                                name: "教员",
+                                data: this.teaList
+                            },
+                            {
+                                name: "用户在线人数",
+                                data: this.sign
+                            }
+                        ]
+                    })
+                    this.chart.hideLoading()
+                }
+            }).catch(err => {
+                console.log(err)
+                this.$alert("获取数据异常，请刷新重试", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        }
     }
 }
 </script>

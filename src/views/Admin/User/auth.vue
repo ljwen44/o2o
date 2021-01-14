@@ -58,9 +58,10 @@
                 label="毕业学校"
                 prop="school">
             </el-table-column>
-            <el-table-column
-                label="注册时间"
-                prop="regtime">
+            <el-table-column label="注册时间">
+                <template slot-scope="scope">
+                    {{scope.row.regTime | timeFilter("yyyy-MM-dd")}}
+                </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
@@ -77,6 +78,7 @@
         </el-table>
         <el-pagination
         background
+        v-if="userData.length"
         layout="prev, pager, next"
         :total="total"
         @current-change="currentPageChange">
@@ -85,11 +87,10 @@
 </template>
 
 <script>
-import {ulist} from '@/lib/data.js'
 export default {
     data() {
         return {
-            userData: ulist,
+            userData: [],
             page: 1,
             total: 0,
             search: ''

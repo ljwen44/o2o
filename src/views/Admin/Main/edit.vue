@@ -8,8 +8,8 @@
             <el-form-item label="标题" prop="title">
                 <el-input v-model="ruleForm.title"></el-input>
             </el-form-item>
-            <el-form-item label="描述" prop="desc">
-                <el-input type="textarea" v-model="ruleForm.desc" :rows="10" resize="none"></el-input>
+            <el-form-item label="描述" prop="content">
+                <el-input type="textarea" v-model="ruleForm.content" :rows="10" resize="none"></el-input>
             </el-form-item>
             <el-form-item label="图片" prop="img">
                 <input type="file" id="file" accept="image/*" ref="file" @change="handleImg" v-show="!ruleForm.img">
@@ -31,7 +31,7 @@ export default {
         return {
             ruleForm: {
                 title: '',
-                desc: '',
+                content: '',
                 img: ''
             },
             oimg: "",
@@ -39,7 +39,7 @@ export default {
                 title: [
                     { required: true, message: '请输入标题', trigger: 'blur' },
                 ],
-                desc: [
+                content: [
                     { required: true, message: '请输入内容', trigger: 'blur' }
                 ]
             },
@@ -52,14 +52,14 @@ export default {
                 if (valid) {
                     let data = this.$qs.stringify({
                         title: this.ruleForm.title,
-                        title: this.ruleForm.desc,
+                        desc: this.ruleForm.content,
                         img: this.ruleForm.img,
                         bid: this.ruleForm.bid,
                         oimg: this.ruleForm.oimg
                     })
                     if(this.ruleForm.img){
                         if(this.newCreate){
-                            this.axios.post("/addBanner", data)
+                            this.axios.post("/bannerController/addBanner", data)
                             .then(res => {
                                 if(res.data.message){
                                     this.$alert(res.data.message, "提示", {
@@ -79,7 +79,7 @@ export default {
                                 })
                             })
                         } else {
-                            this.axios.post("/editBanner", data)
+                            this.axios.post("/bannerController/editBanner", data)
                             .then(res => {
                                 if(res.data.message){
                                     this.$alert(res.data.message, "提示", {

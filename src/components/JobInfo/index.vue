@@ -15,12 +15,18 @@
                     电话：{{item.userPhone}}
                 </span>
                 <span>
-                    <i class="el-icon-coin"></i>
-                    薪资：{{item.minSalary}}-{{item.maxSalary}}元/天
-                </span>
-                <span>
                     <i class="iconfont icon-xueshimao"></i>
                     学历：{{item.precord}}
+                </span>
+            </p>
+            <p>
+                <span>
+                    <i class="el-icon-coin"></i>
+                    薪资：{{item.salary}}元/天
+                </span>
+                <span>
+                    <i class="el-icon-time"></i>
+                    持续天数：{{item.day}}天
                 </span>
             </p>
             <p>
@@ -29,9 +35,9 @@
                     地点：{{item.province + item.city + item.block + item.address}}
                 </span>
             </p>
-            <p>
+            <router-link :to="'/detail?pid='+item.pid" tag="p">
                 内容描述：{{item.content}}
-            </p>
+            </router-link>
             <p>
                 <span>
                     <i class="el-icon-time"></i> 

@@ -1,6 +1,17 @@
 <template>
     <el-main>
         <JobInfo :item="item"></JobInfo>
+        <el-button 
+            v-if="ostatus!=='已完成'"
+            type="primary" 
+            @click="handleCancel" 
+            style="margin: 0 0 20px 20px;">取消发布</el-button>
+        <el-button 
+            type="success"
+            v-if="ostatus==='进行中'"
+            @click="handleFinish">
+            完成家教
+        </el-button>
         <h3>教员信息</h3>
         <el-row v-if="status">
             <el-card class="box-card">
@@ -10,7 +21,7 @@
                         <i :class="ostatus==='进行中'? 'el-icon-warning-outline' : 'el-icon-success'"></i>
                         {{ostatus==='进行中'? '家教进行中' : '家教已完成'}}
                     </span>
-                    <el-button style="float: right; padding: 3px 0" type="text">联系他</el-button>
+                    <el-button style="float: right; padding: 3px 0" type="text" @click="handleConnect">联系他</el-button>
                 </div>
                 <div class="userInfo">
                     <div class="avatar">
@@ -41,7 +52,7 @@
             </el-card>
             <el-row v-if="!estatus && ostatus==='已完成'">
                 <el-button type="success" style="margin-top: 20px;" @click="handleEvaluate">评价</el-button>
-                <el-rate v-model="rate" @change="handleRate" style="margin-top:10px;"></el-rate>
+                <el-rate v-model="rate" style="margin-top:10px;"></el-rate>
                 <el-input
                     type="textarea"
                     resize="none"
@@ -58,7 +69,8 @@
             <el-timeline-item
                 v-for="(progress, index) in progressList"
                 :key="index"
-                :timestamp="progress.time">
+                :timestamp="progress.ppTime"
+                placement="top">
                 {{progress.content}}
             </el-timeline-item>
         </el-timeline>
@@ -81,11 +93,12 @@ export default {
             evaluate: "", // 评价内容
             estatus: false, // 评价状态
             oid: '',
+            pid: ''
         }
     },
     created() {
-        let pid = this.$router.history.current.query.pid
-        this.getData(pid)
+        this.pid = this.$router.history.current.query.pid
+        this.getData(this.pid)
     },
     components: {
         JobInfo
@@ -116,8 +129,18 @@ export default {
                 })
             })
         },
-        handleRate(){
-            console.log(this.rate)
+        handleConnect(){
+            let u = {
+                userUUID: this.userTeach.userUUID,
+                userName: this.userTeach.userName,
+                avatar: this.userTeach.avatar
+            }
+            this.$router.push({
+                path: "/message",
+                query: {
+                    user: JSON.stringify(u)
+                }
+            })
         },
         handleEvaluate(){
             if(!this.rate){
@@ -136,7 +159,7 @@ export default {
             }
             let data = this.$qs.stringify({
                 uid: this.user.userUUID,
-                cotent: this.evaluate,
+                content: this.evaluate,
                 rate: this.rate,
                 ruid: this.userTeach.userUUID,
                 oid: this.oid
@@ -161,6 +184,70 @@ export default {
                 this.$alert("评价失败，请稍后重试！", "提示", {
                     confirmButtonText: "确定"
                 })
+            })
+        },
+        handleCancel(){
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID,
+                pid: this.item.pid
+            })
+            this.axios.post("/jobController/cancel", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.$alert("取消成功", "提示", {
+                        confirmButtonText: "确定",
+                        callback: () => {
+                            this.user.coin += res.data.coin
+                            this.$store.commit("SETUSER", this.user)
+                            this.$router.push('/user/pjob/mypub/index')
+                        }
+                    })
+                }
+            }).catch(err => {
+                this.$alert("取消失败，请稍后重试！", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
+        handleFinish(){
+            this.$confirm('您确定完成该订单吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                let data = this.$qs.stringify({
+                    oid: this.oid,
+                    pid: this.pid,
+                    uid: this.userTeach.userUUID
+                })
+                this.axios.post("/orderController/finishOrder", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("操作成功", "提示", {
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.$router.push('/user/pjob/mypub/index')
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("取消失败，请刷新重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消操作'
+                })       
             })
         }
     },

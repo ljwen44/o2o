@@ -12,11 +12,14 @@ export default {
     // },
     data() {
         return {
-            chart: null
+            chart: null,
+            time: [],
+            value: []
         };
     },
     mounted() {
-        this.chinaConfigure();
+        this.chinaConfigure()
+        this.getData()
     },
     beforeDestroy() {
         if (!this.chart) {
@@ -39,12 +42,16 @@ export default {
                     }
                 },
                 legend: {
-                    data: ["学员", "教员"]
+                    data: "人数"
                 },
                 xAxis: [
                     {
                         type: "category",
-                        data: this.day
+                        data: [],
+                        axisLabel: {  
+                            interval:0,  
+                            rotate:40  
+                        }  
                     },
                 ],
                 yAxis: [
@@ -55,9 +62,9 @@ export default {
                 ],
                 series: [
                     {
-                        name: "学员",
+                        name: "人数",
                         type: "line",
-                        data: [2,6,7,5,2,1,4],
+                        data: [],
                         markPoint: {
                             data: [
                                 {type: 'max', name: '最大值'},
@@ -65,23 +72,48 @@ export default {
                             ]
                         },
                     },
-                    {
-                        name: "教员",
-                        type: "line",
-                        data: [4,2,3,5,7,1,6],
-                        markPoint: {
-                            data: [
-                                {type: 'max', name: '最大值'},
-                                {type: 'min', name: '最小值'}
-                            ]
-                        },
-                    }
                 ]
             })
             window.addEventListener('resize', () => {
                 this.chart.resize()
             })
         },
+        getData(){
+            this.chart.showLoading()
+            this.axios.post("/adminController/getUserNumByDate")
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    for (let index = 0; index < res.data.userNumList.length; index++) {
+                        this.time.unshift(res.data.userNumList[index].time)
+                        this.value.unshift(res.data.userNumList[index].value)
+                    }
+                    this.chart.setOption({
+                        xAxis: [
+                            {
+                                type: "category",
+                                data: this.time
+                            },
+                        ],
+                        series: [
+                            {
+                                name: "人数",
+                                data: this.value
+                            },
+                        ]
+                    })
+                    this.chart.hideLoading()
+                }
+            }).catch(err => {
+                console.log(err)
+                this.$alert("获取数据异常，请刷新重试", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        }
     },
 }
 </script>

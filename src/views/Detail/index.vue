@@ -1,7 +1,7 @@
 <template>
     <el-main>
         <el-row>
-            <el-col :sm="20" :md="20" :lg="20">
+            <el-col :sm="24" :md="24" :lg="24">
                 <el-card class="box-card">
                     <div class="userWrapper">
                         <el-avatar :size="50" :src="item.avatar"></el-avatar>
@@ -24,14 +24,18 @@
                         <p>
                             <span>
                                 <i class="el-icon-coin"></i>
-                                薪资：{{item.minSalary}} - {{ item.maxSalary }}元/天
+                                薪资：{{item.salary}}元/天
                             </span>
                             <span>
                                 <i class="iconfont icon-xueshimao"></i>
-                                学历：{{item.prerecord}}
+                                学历：{{item.precord}}
                             </span>
                         </p>
                         <p>
+                            <span>
+                                <i class="el-icon-time"></i>
+                                持续天数：{{item.day}}
+                            </span>
                             <span>
                                 <i class="el-icon-location-information"></i>
                                 地点：{{item.province + item.city + item.block + item.address}}
@@ -44,10 +48,10 @@
                             </span>
                         </p>
                     </div>
-                    <el-button @click="handleConnect(item.uid)">与他联系</el-button>
+                    <el-button @click="handleConnect" v-if="!item.uid === user.userUUID">与他联系</el-button>
+                    <el-button type="primary" @click="handleAddOrder" v-if="user.type==='教员'">接单</el-button>
                 </el-card>
             </el-col>
-            <el-col :sm="4" :md="4" :lg="4"></el-col>
         </el-row>
     </el-main>
 </template>
@@ -72,12 +76,13 @@ export default {
             })
             this.axios.post("/jobController/getPartJobByPID", data)
             .then(res => {
+                console.log(res.data)
                 if(res.data.message){
                     this.$alert(res.data.message, "提示",{
                         confirmButtonText: "确定"
                     })
                 } else {
-                    this.item = res.data.item
+                    this.item = res.data.info
                 }
             }).catch(err => {
                 this.$alert("获取数据异常，请稍后重试!", "提示", {
@@ -85,8 +90,54 @@ export default {
                 })
             })
         },
-        handleConnect(id){
-            this.$message("与他联系")
+        handleConnect(){
+            let obj = {
+                userName: this.item.name,
+                avatar: this.item.avatar,
+                userUUID: this.item.uid
+            }
+            this.$router.push({
+                path: "/message",
+                query: {
+                    user: JSON.stringify(obj)
+                }
+            })
+        },
+        handleAddOrder(){
+            this.$confirm('您确定接单吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                let data = this.$qs.stringify({
+                    pid: this.item.pid,
+                    uid: this.user.userUUID
+                })
+                this.axios.post("/orderController/addOrder", data)
+                .then(res => {
+                    if(res.data.message){
+                        this.$alert(res.data.message, "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    } else {
+                        this.$alert("已成功接单,请尽快与招聘者联系", "提示", {
+                            confirmButtonText: "确定",
+                            callback: () => {
+                                this.handleConnect()
+                            }
+                        })
+                    }
+                }).catch(err => {
+                    this.$alert("接单失败，请稍后重试!", "提示", {
+                        confirmButtonText: "确定"
+                    })
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消接单'
+                })       
+            })
         }
     },
     computed: {

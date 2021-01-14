@@ -76,7 +76,7 @@ export const routes = [
                     },
                     {
                         path: "order",
-                        component: () => import('@/views/User/Order/index.vue'),
+                        component: () => import('@/views/User/Order/main.vue'),
                         meta: {
                             title: "我的订单"
                         },
@@ -84,7 +84,7 @@ export const routes = [
                         children: [
                             {
                                 path: "finish",
-                                component: () => import('@/views/User/Order/finish.vue'),
+                                component: () => import('@/views/User/Order/index.vue'),
                                 meta: {
                                     title: "订单"
                                 }

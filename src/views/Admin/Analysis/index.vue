@@ -2,7 +2,7 @@
     <el-main>
         <el-row>
             <el-col :sm="12" :md="12">
-                <BarCharts></BarCharts>
+                <BarCharts :barData="barData"></BarCharts>
             </el-col>
             <el-col :sm="12" :md="12">
                 <UserLineCharts></UserLineCharts>
@@ -16,8 +16,7 @@
             <div style="text-align: left;margin: 10px 0;">
                 <el-cascader
                     v-model="selectVal"
-                    :options="options"
-                    @change="handleChange"></el-cascader>
+                    :options="options"></el-cascader>
             </div>
             <LineCharts :time="selectVal"></LineCharts>
         </el-row>
@@ -34,7 +33,8 @@ export default{
     data() {
         return {
             selectVal: [],
-            options: months
+            options: months,
+            barData: null
         }
     },
     components: {
@@ -42,11 +42,6 @@ export default{
         BarLineEcharts,
         LineCharts,
         UserLineCharts
-    },
-    methods: {
-        handleChange(){
-            console.log(this.selectVal)
-        }
     },
     created() {
         let time = new Date()

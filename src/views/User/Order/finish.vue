@@ -19,6 +19,9 @@
                 </el-card>
             </el-timeline-item>
         </el-timeline>
+        <p v-if="!list.length">
+            您暂时还没接单~
+        </p>
     </el-main>
 </template>
 
@@ -28,11 +31,12 @@ export default {
     data() {
         return {
             list: [],
-            type: ''
+            type: 0
         }
     },
     created() {
         this.type = this.$router.history.current.query
+        this.getData(this.type)
     },
     computed: {
         ...mapState([
@@ -40,13 +44,15 @@ export default {
         ])
     },
     methods: {
-        getData(){
+        getData(type){
+            console.log(type)
             let data = this.$qs.stringify({
                 uid: this.user.userUUID,
-                flag: this.type === 0 ? "进行中" : "已完成"
+                flag: type === 0 ? "进行中" : "已完成"
             })
             this.axios.post("/orderController/getOrder", data)
             .then(res => {
+                console.log(res.data)
                 if(res.data.message){
                     this.$alert(res.data.message, "提示", {
                         confirmButtonText: "确定"
@@ -61,11 +67,19 @@ export default {
             })
         }
     },
+    watch: {
+        type(newVal, oldVal){
+            console.log(newVal)
+            this.getData(newVal)
+            return newVal
+        }
+    }
 }
 </script>
 
 <style lang='less' scoped>
 .el-main{
+    min-height: 400px;
     .el-timeline{
         text-align: left;
         .el-timeline-item{
