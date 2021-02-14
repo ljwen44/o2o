@@ -26,9 +26,10 @@
                     </span>
                     <span class="icon">
                         <i class="iconfont icon-jinbishangcheng"></i>我的学币: {{user.coin ? user.coin : 0}}
-                        <el-button type="success" size="mini">提现</el-button>
-                        <el-button size="mini">充值</el-button>
+                        <el-link style="font-size:12px;margin-left:10px;" @click="reflush">刷新</el-link>
                     </span>
+                    <el-button type="success" size="medium" @click="drawalVisible = true">提现</el-button>
+                    <el-button size="medium" @click="payVisible = true">充值</el-button>
                 </div>
                 <div class="box">
                     <h3>基本资料</h3>
@@ -110,19 +111,78 @@
                 :disabled="(user.integral && user.integral> 100) ? false: true"
             >兑换</el-button>
         </el-dialog>
+        <!-- 充值窗口 -->
+        <el-dialog title="学币充值" :visible.sync="payVisible">
+            <div v-if="!qrcode">
+                <p class="pay">兑换规则: 1元=1学币</p>
+                <p class="pay">注意事项：支付前请检查您要充值的金额，只能充值 1 的整数倍金额，一次最多充值1000元.</p>
+                <el-input-number 
+                    v-model="paynum"
+                    :min="1" 
+                    :max="1000" 
+                    size="small">
+                </el-input-number><br>
+                <el-button 
+                    size="small" 
+                    @click="handlePay"
+                >充值</el-button>
+            </div>
+            <div v-show="qrcode">
+                <div ref="qrcode" id="qrcode"></div>
+                <el-button type="primary" size="mini" @click="confirmPay">确定支付</el-button>
+            </div>
+        </el-dialog>
+        <!-- 提现窗口 -->
+        <el-dialog title="提现窗口" :visible.sync="drawalVisible">
+            <el-form label-position="left" label-width="100px" :model="form" :rules="rules" ref="form">
+                <el-form-item label="支付宝账号" prop="account">
+                    <el-input v-model="form.account"></el-input>
+                </el-form-item>
+                <el-form-item label="真实姓名" prop="userName">
+                    <el-input v-model="form.userName"></el-input>
+                </el-form-item>
+                <el-form-item label="提现金额" prop="amount">
+                    <el-input v-model="form.amount"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-button type="primary" @click="handleDrawal('form')">提现</el-button>
+        </el-dialog>
     </el-main>
 </template>
 
 <script>
+import QRCode from "qrcode2"
 import { mapState } from 'vuex'
 export default {
     data() {
         return {
             list: [],
             dialogVisible: false,
+            payVisible: false,
+            drawalVisible: false,
             num: '',
+            paynum: '',
             active: null,
-            duanArr: ['青铜', '白银', '黄金', '大师']
+            duanArr: ['青铜', '白银', '黄金', '大师'],
+            qrcode: false,
+            out_trade_no: '',
+            visible: false,
+            form: {
+                account: '',
+                amount: '',
+                userName: ''
+            },
+            rules: {
+                userName: [
+                    { required: true, message: '请输入支付宝真实姓名', trigger: 'blur' },
+                ],
+                account: [
+                    { required: true, message: '请输入支付宝账号', trigger: 'blur' },
+                ],
+                amount: [
+                    { required: true, message: '请输入提现金额', trigger: 'blur' },
+                ]
+            }
         }
     },
     created() {
@@ -178,6 +238,7 @@ export default {
         errorHandler(){
             return true
         },
+        // 积分兑换
         handleExchange(){
             let data = this.$qs.stringify({
                 num: this.num,
@@ -206,6 +267,37 @@ export default {
                 })
             })
         },
+        // 学币充值
+        handlePay(){
+            if(!Number.isInteger(this.paynum)){
+                this.$message("输入金额只能输入1的倍数")
+                return
+            }
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID,
+                paynum: this.paynum
+            })
+            this.axios.post("/alipayController/QRcode", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.qrcode = true
+                    let qrcode = new QRCode("qrcode", {
+                        width: 200,
+                        height: 200,
+                        text: res.data.QRcode
+                    })
+                    this.out_trade_no = res.data.out_trade_no
+                }
+            }).catch(err => {
+                this.$alert("操作失败，请稍后重试!", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
         getData(){
             let data = this.$qs.stringify({
                 uid: this.user.userUUID
@@ -226,6 +318,97 @@ export default {
                 this.$alert("获取数据异常", "提示", {
                     confirmButtonText: "确定"
                 })
+            })
+        },
+        // 确定支付
+        confirmPay(){
+            let data = this.$qs.stringify({
+                apid: this.out_trade_no
+            })
+            this.axios.post("/alipayController/confirmPay", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$message({
+                        type: "danger",
+                        message: res.data.message
+                    })
+                } else {
+                    this.user.coin += parseInt(res.data.coin)
+                    this.$store.commit('SETUSER', this.user)
+                    this.qrcode = false
+                    this.payVisible = false
+                    this.$message({
+                        type: "success",
+                        message: "支付成功!"
+                    })
+                }
+            }).catch(err => {
+                this.$message({
+                    type: "danger",
+                    message: "操作异常，请稍后重试!"
+                })
+            })
+        },
+        reflush(){
+            let data = this.$qs.stringify({
+                uid: this.user.userUUID
+            })
+            this.axios.post("/userController/reCoin", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.user.coin = res.data.coin
+                    this.$store.commit("SETUSER", this.user)
+                }
+            }).catch(err => {
+                this.$alert("刷新失败，请稍后重试!", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
+        handleDrawal(formName){
+            this.$refs[formName].validate((valid) => {
+                if (valid) {
+                    if(!Number.isInteger(parseInt(this.form.amount))){
+                        this.$message({
+                            message: "提现金额需为1的整数倍",
+                            type: "warning"
+                        })
+                        return false
+                    }
+                    let data = this.$qs.stringify({
+                        amount: this.form.amount,
+                        account: this.form.account,
+                        userName: this.form.userName,
+                        uid: this.user.userUUID
+                    })
+                    this.axios.post("/alipayController/drawal", data)
+                    .then(res => {
+                        if(res.data.message){
+                            this.$alert("提现失败，请稍后重试", "提示", {
+                                confirmButtonText: "确定"
+                            })
+                            console.log(res.data.message)
+                        } else {
+                            this.user.coin -= parseInt(res.data.coin)
+                            this.$store.commit("SETUSER", this.user)
+                            this.$message({
+                                message: "提现成功，请稍后到支付宝查看",
+                                type: "success"
+                            })
+                            this.drawalVisible = false
+                        }
+                    }).catch(err => {
+                        this.$alert("操作失败，请刷新重试!", "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    })
+                } else {
+                    return false;
+                }
             })
         }
     },
@@ -298,9 +481,20 @@ export default {
     }
     /deep/
     .el-dialog{
-        width: 20%;
+        width: 30%;
         p{
             font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .pay{
+            color: #ccc;
+            text-align: left;
+            font-size: 14px;
+        }
+        #qrcode{
+            img{
+                margin: 5px auto;
+            }
         }
         .el-button{
             margin-top: 20px;

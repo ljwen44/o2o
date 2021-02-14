@@ -19,7 +19,7 @@
                 </p>
             </template>
             <el-form v-if="edit">
-                <el-button @click="edit=false">返回</el-button>
+                <el-button @click="edit=false" size="small" style="margin: 10px 0;">返回</el-button>
                 <el-form-item label="昵称">
                     <el-input v-model="form.userName" type="text"></el-input>
                 </el-form-item>

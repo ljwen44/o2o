@@ -48,7 +48,7 @@
                                 <el-avatar :src="item.avatar"></el-avatar>
                                 <span class="name">{{item.userName}}</span>
                                 <el-rate
-                                    v-model="item.rate"
+                                    v-model="item.erate"
                                     disabled
                                     show-score
                                     text-color="#ff9900"
@@ -93,6 +93,7 @@ export default {
             })
             this.axios.post("/userController/getUserDeatailByUID", data)
             .then(res => {
+                console.log(res.data)
                 if(res.data.message){
                     this.$alert(res.data.message, "提示", {
                         confirmButtonText: "确定"

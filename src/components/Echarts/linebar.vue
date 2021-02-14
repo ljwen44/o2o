@@ -111,7 +111,6 @@ export default {
             this.chart.showLoading()
             this.axios.post("/adminController/getBarLineByDate")
             .then(res => {
-                console.log(res.data)
                 if(res.data.message){
                     this.$alert(res.data.message, "提示", {
                         confirmButtonText: "确定"

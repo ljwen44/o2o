@@ -60,6 +60,7 @@ export default {
                         callback: () => {
                             this.flag = true
                             this.user.integral = parseInt(this.user.integral) + 5
+                            this.user.caclIntergral = parseInt(this.user.caclIntergral) + 5
                             this.$store.commit("SETUSER", this.user)
                             this.$store.commit('ADDSIGN', this.time)
                         }

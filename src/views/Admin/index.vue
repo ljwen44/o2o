@@ -94,6 +94,12 @@ export default {
             this.$router.push("/admin/security")
         }
     },
+    created() {
+        let localUser = localStorage.getItem("_o2o_user")
+        if(localUser){
+            this.$store.commit("SETUSER", JSON.parse(localUser))
+        }
+    },
 }
 </script>
 

@@ -1,14 +1,16 @@
 <template>
     <el-main>
         <h3>系统通知</h3>
-        <el-timeline v-if="sysList.length">
-            <el-timeline-item :timestamp="item.time | timeFilter('yyyy-MM-dd')" placement="top" v-for="(item, index) in sysList" :key="index">
-                <el-card>
-                    <h4>{{item.desc}}</h4>
-                    <p>{{item.time}}</p>
-                </el-card>
-            </el-timeline-item>
-        </el-timeline>
+        <template v-if="sysList.length">
+            <el-timeline v-loading="loading">
+                <el-timeline-item :timestamp="item.time | timeFilter('yyyy-MM-dd')" placement="top" v-for="(item, index) in sysList" :key="index">
+                    <el-card>
+                        <h4>{{item.desc}}</h4>
+                        <p>{{item.time}}</p>
+                    </el-card>
+                </el-timeline-item>
+            </el-timeline>
+        </template>
         <p style="text-align: left;" v-else>您还没有接收到任何系统通知</p>
     </el-main>
 </template>
@@ -18,7 +20,8 @@ import {mapState} from 'vuex'
 export default {
     data() {
         return {
-            sysList: []
+            sysList: [],
+            loading: true
         }
     },
     methods: {
@@ -34,6 +37,7 @@ export default {
                     })
                 } else {
                     this.sysList = res.data.sysList
+                    this.loading = false
                 }
             }).catch(err => {
                 this.$alert("获取数据异常", "提示", {

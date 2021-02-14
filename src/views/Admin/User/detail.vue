@@ -1,10 +1,15 @@
 <template>
     <el-main>
         <el-page-header @back="goBack" style="margin-bottom: 20px;"></el-page-header>
-        <el-card>
+        <el-card v-loading="loading">
             <el-row>
                 <el-col :sm="6" :md="6" :lg="6">
-                    <el-image :src="user.avatar" fit="fill"></el-image>
+                    <!-- <el-image v-if="user"  fit="fill"></el-image> -->
+                    <el-image :src="user.avatar" fit="fill">
+                        <div slot="error" class="image-slot">
+                            <i class="el-icon-picture-outline"></i>
+                        </div>
+                    </el-image>
                 </el-col>
                 <el-col :sm="18" :md="18" :lg="18" class="box">
                     <h3>基本资料</h3>
@@ -28,7 +33,7 @@
                     </p>
                 </el-col>
             </el-row>
-            <el-row v-if="type==='教员'">
+            <!-- <el-row v-if="type==='教员'">
                 <div class="box">
                     <h3>用户评价</h3>
                     <el-card>
@@ -67,7 +72,7 @@
                         </el-timeline-item>
                     </el-timeline>
                 </div>
-            </el-row>
+            </el-row> -->
         </el-card>
     </el-main>
 </template>
@@ -80,7 +85,8 @@ export default {
             list: [],
             uid: '',
             type: '',
-            user: {}
+            user: {},
+            loading: true
         }
     },
     methods: {
@@ -96,6 +102,7 @@ export default {
                         confirmButtonText: "确定"
                     })
                 } else {
+                    this.loading = false
                     this.user = res.data.user
                     this.evaluateList = res.data.evaList || []
                     this.list = res.data.jobList
@@ -113,7 +120,7 @@ export default {
     created() {
         this.uid = this.$router.history.current.query.uid
         this.type = this.$router.history.current.query.type
-        // this.getData()
+        this.getData()
     },
 }
 </script>

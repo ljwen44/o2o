@@ -2,7 +2,7 @@
     <el-card class="box-card">
         <el-avatar :size="40" :src="item.avatar" shape="square"></el-avatar>
         <div class="userInfoWrapper">
-            <router-link tag="p" :to="'/udetail?uid=' + item.userUUID">
+            <router-link tag="p" :to="'/udetail?uid=' + item.ruid">
                 {{item.userName}}
                 <el-tag tyrouter-linke="info" class="flag">
                     <i class="iconfont icon-renzheng" :style="{color: item.auth==='已认证' ? 'green': 'grey'}">

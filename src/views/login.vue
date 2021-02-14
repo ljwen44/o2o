@@ -2,7 +2,7 @@
     <el-container>
         <router-link to="/" tag="h3" class="title">学生-家教兼职系统</router-link>
         <el-main v-show="!updPwd">
-            <el-form :model="form" :rules="rules" ref="form" label-width="60px" label-position="left">
+            <el-form v-show="loginBox" :model="form" :rules="rules" ref="form" label-width="60px" label-position="left">
                 <h3>用户登录</h3>
                 <el-form-item label="邮箱" prop="userEmail">
                     <el-input v-model="form.userEmail"  placeholder="请输入邮箱"></el-input>
@@ -11,12 +11,12 @@
                     <el-input v-model="form.userPwd" type="password"  placeholder="请输入6-12位的密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="handleLogin('form')">登录</el-button>
-                    <el-link @click="handleStatus">点击注册</el-link><br>
-                    <el-link @click="handleForget">忘记密码？</el-link>
+                    <el-button type="primary" @click="handleLogin('form')" style="margin-bottom:20px;">登录</el-button>
+                    <el-link @click="handleStatus" style="float:left;">点击注册</el-link>
+                    <el-link @click="handleForget" style="float:right;">忘记密码？</el-link>
                 </el-form-item>
             </el-form>
-            <el-form :model="form" :rules="rules" ref="form" label-width="60px" label-position="left">
+            <el-form v-show="registerBox" :model="form" :rules="rules" ref="form" label-width="60px" label-position="left">
                 <h3>用户注册</h3>
                 <el-form-item label="邮箱" prop="userEmail">
                     <el-input v-model="form.userEmail"  placeholder="请输入邮箱"></el-input>
@@ -35,25 +35,27 @@
                 </el-form-item>
                 <el-form-item>
                     <el-button type="success" @click="handleRegister">注册</el-button>
-                    <el-link @click="handleStatus">点击登录</el-link>
+                    <el-link @click="handleStatus" style="text-align: centetr;">点击登录</el-link>
                 </el-form-item>
             </el-form>
-            <div class="mask" 
-                :style="{left: loginBox?'50%':'0','background-position': loginBox? '100% 0' : '0 0'}"
-                @click="handleStatus"></div>
         </el-main>
         <el-main v-show="updPwd" class="upd">
             <el-form :model="updForm" :rules="rules" ref="updform" label-width="80px" label-position="right">
                 <h3>找回密码</h3>
                 <el-form-item label="手机号码" prop="userPhone">
-                    <el-input v-model="form.userPhone" maxlength="11">
+                    <el-input v-model="updForm.userPhone" maxlength="11">
                         <template slot="append">
-                            <el-button @click="sendCode">发送</el-button>
+                            <el-button @click="sendCode" :disabled="flag">
+                                {{ flag ? time + "s" : "发送" }}
+                            </el-button>
                         </template>
                     </el-input>
                 </el-form-item>
+                <el-form-item label="新密码" prop="newpass">
+                    <el-input v-model="updForm.newpass" type="password" placeholder="请输入新密码"></el-input>
+                </el-form-item>
                 <el-form-item label="验证码" prop="code">
-                    <el-input v-model="form.code"></el-input>
+                    <el-input v-model="updForm.code"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="handleUpdate('updform')">修改密码</el-button>
@@ -91,11 +93,13 @@ export default {
                 validCode: '', // 验证码
                 userPhone: '', // 手机号码
             }, // 表单信息
-            loginBox: true, // 登录注册框
-            updPwd: false,
+            loginBox: true, // 登录框
+            registerBox: false, // 注册框
+            updPwd: false, // 忘记密码框
             updForm: {
                 userPhone: '',
-                code: ''
+                code: '',
+                newpass: ""
             },
             rules: {
                 userPhone: [
@@ -115,25 +119,83 @@ export default {
                 ],
                 code: [
                     { required: true, message: '请输入验证码', trigger: 'blur' }
-                ]
-            }
+                ],
+                newpass: [
+                    { required: true, message: '请输入密码', trigger: 'blur' },
+                    { min:6, max: 12, message: "密码应是6-12位数字、字母或字符！", trigger: 'blur' }
+                ],
+            },
+            time: 60,
+            flag: false // 发送按钮是否可点击
         }
     },
     methods: {
         handleStatus(){
             this.loginBox = !this.loginBox
+            this.registerBox = !this.registerBox
         },
         handleForget(){
             this.updPwd = !this.updPwd
             this.resetForm()
         },
         sendCode(){
-            this.$message("发送验证码")
+            if(!this.updForm.userPhone){
+                this.$message("请填写手机号码")
+                return
+            }
+            if(this.time !== 60){
+                return 
+            }
+            let data = this.$qs.stringify({
+                phone: this.updForm.userPhone
+            })
+            this.axios.post("/phoneController/getCodeByPhone", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.flag = true
+                    let timer = setInterval(() => {
+                        if(this.time <= 0){
+                            clearInterval(timer)
+                            this.time = 60
+                            this.flag = false
+                        } else {
+                            this.time--
+                        }
+                    }, 1000)
+                }
+            }).catch(err => {
+                console.log(err)
+                this.$alert("获取验证码失败，请稍后重试!", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
         },
         handleUpdate(formName){
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    alert('submit!');
+                    // 全部字段都符合规则，进行下一步操作
+                    let data = this.$qs.stringify({
+                        validate: this.updForm.code
+                    })
+                    this.axios.post("/phoneController/validateCode", data)
+                    .then(res => {
+                        if(res.data.message){
+                            this.$alert(res.data.message, "提示", {
+                                confirmButtonText: "确定"
+                            })
+                        } else {
+                            // 验证通过，进行密码修改
+                            this.updPass()
+                        }
+                    }).catch(err => {
+                        this.$alert("操作失败，请稍后重试!", "提示", {
+                            confirmButtonText: "确定"
+                        })
+                    })
                 } else {
                     return false;
                 }
@@ -213,6 +275,31 @@ export default {
                 })
             })
         },
+        updPass(){
+            let data = this.$qs.stringify({
+                phone: this.updForm.userPhone,
+                password: this.updForm.newpass
+            })
+            this.axios.post("/userController/updByPhone", data)
+            .then(res => {
+                if(res.data.message){
+                    this.$alert(res.data.message, "提示", {
+                        confirmButtonText: "确定"
+                    })
+                } else {
+                    this.$alert("修改成功!", "提示", {
+                        confirmButtonText: "确定",
+                        callback: () => {
+                            this.updPwd = false
+                        }
+                    })
+                }
+            }).catch(err => { 
+                this.$alert("修改失败，请稍后重试!", "提示", {
+                    confirmButtonText: "确定"
+                })
+            })
+        },
         resetForm() {
             this.$refs['form'].resetFields()
         }
@@ -230,23 +317,26 @@ export default {
 .el-container{
     height: 100vh;
     width: 100%;
-    background: rgba(5,195,231,.8);
+    background: url('../assets/images/bg1.jpg') no-repeat;
+    background-size: cover;
     .title{
         position: absolute;
         width: 100%;
         color: #fff;
         font-size: 36px;
         cursor: pointer;
-        top: 10%;
+        top: 5%;
+        z-index: 11;
     }
     .el-main{
+        z-index: 11;
         box-shadow: 0 0 8px #ccc;
-        background: #fff;
-        margin: auto 20%;
+        background: rgba(255,255,255,.5);
+        margin: auto 30%;
         position: relative;
         padding: 0;
         .el-form{
-            width: 40%;
+            width: 90%;
             float: left;
             padding: 0 5%;
             margin: 2% 0;
@@ -260,26 +350,9 @@ export default {
                 line-height: 20px;
             }
         }
-        .mask{
-            background: url('../assets/images/login.jpg') no-repeat;
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            transition: all ease .5s;
-        }
-        .mask::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            top: 0;
-            background-color: rgba(255, 255, 255, .3);
-            z-index: 2;
-        }
     }
     .upd{
-        margin: auto 35%;
+        margin: auto 30%;
         .el-form{
             width: 80%;
             .el-input{
@@ -290,5 +363,8 @@ export default {
             }
         }
     }
+}
+h3{
+    color: #fff;
 }
 </style>

@@ -19,6 +19,7 @@
                     :options="options"></el-cascader>
             </div>
             <LineCharts :time="selectVal"></LineCharts>
+            <PayLineCharts :time="selectVal"></PayLineCharts>
         </el-row>
     </el-main>
 </template>
@@ -28,6 +29,7 @@ import BarLineEcharts from '_c/Echarts/linebar.vue'
 import BarCharts from '_c/Echarts/bar.vue'
 import LineCharts from '_c/Echarts/line.vue'
 import UserLineCharts from '_c/Echarts/userLine.vue'
+import PayLineCharts from '_c/Echarts/coinLine.vue'
 import { months } from '@/lib/data.js'
 export default{
     data() {
@@ -41,7 +43,8 @@ export default{
         BarCharts,
         BarLineEcharts,
         LineCharts,
-        UserLineCharts
+        UserLineCharts,
+        PayLineCharts
     },
     created() {
         let time = new Date()
